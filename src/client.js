@@ -1,6 +1,5 @@
 'use strict'
 
-const EventEmitter = require('events')
 const { request, STATUS_CODES } = require('http')
 const url = require('url')
 const old = require('old')
@@ -22,10 +21,8 @@ function requestBody (method, params) {
   })
 }
 
-class Client extends EventEmitter {
+class Client {
   constructor (uriString = 'localhost:46657') {
-    super()
-
     let uri = url.parse(uriString)
     if (uri.protocol !== 'http' && uri.protocol !== 'tcp') {
       uri = url.parse(`http://${uriString}`)
