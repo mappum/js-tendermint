@@ -1,7 +1,8 @@
 'use strict'
 
-const { request, STATUS_CODES } = require('http')
+const { get, STATUS_CODES } = require('http')
 const url = require('url')
+const qs = require('querystring')
 const old = require('old')
 const concat = require('concat-stream')
 const regeneratorRuntime = require('regenerator-runtime')
@@ -9,41 +10,31 @@ const watt = require('watt')
 const camel = require('camelcase')
 const tendermintMethods = require('./methods.js')
 
-const noop = () => regeneratorRuntime
-// hack to prevent standard from complaining about not using `regeneratorRuntime`
-
-function requestBody (method, params) {
-  return JSON.stringify({
-    jsonrpc: '2.0',
-    id: String(Date.now()),
-    method,
-    params
-  })
-}
-
 class Client {
   constructor (uriString = 'localhost:46657') {
     let uri = url.parse(uriString)
     if (uri.protocol !== 'http' && uri.protocol !== 'tcp') {
       uri = url.parse(`http://${uriString}`)
     }
-    this.reqOpts = {
-      host: uri.hostname,
-      port: uri.port,
-      method: 'POST',
-      path: '/'
-    }
-
+    this.uri = uri
     this.call = watt(this.call, { context: this })
   }
 
-  * call (method, args, next) {
-    let req = request(this.reqOpts, next.arg(0))
-    let reqBody = requestBody(method, args)
-    req.write(reqBody)
-    req.end()
+  requestUrl (method, params) {
+    for (let k in params) {
+      let v = params[k]
+      if (Buffer.isBuffer(v)) {
+        params[k] = '0x' + v.toString('hex')
+      } else if (v instanceof Uint8Array) {
+        params[k] = '0x' + Buffer.from(v).toString('hex')
+      }
+    }
+    let query = qs.stringify(params)
+    return `http://${this.uri.hostname}:${this.uri.port}/${method}?${query}`
+  }
 
-    let res = yield // wait for http request callback
+  * call (method, args, next) {
+    let res = yield get(this.requestUrl(method, args), next.arg(0))
     if (res.statusCode !== 200) {
       let err = `${res.statusCode} - ${STATUS_CODES[res.statusCode]}`
       throw new Error(err)
@@ -57,16 +48,13 @@ class Client {
 }
 
 // add methods to Client class based on methods defined in './methods.js'
-for (let method of tendermintMethods) {
-  Client.prototype[camel(method)] = function (...args) {
-    let cb = args[args.length - 1]
-    if (typeof cb !== 'function') {
-      cb = noop
-    } else {
-      args = args.slice(0, args.length - 1)
-    }
-    return this.call(method, args, cb)
+for (let name of tendermintMethods) {
+  Client.prototype[camel(name)] = function (args, cb) {
+    return this.call(name, args, cb)
   }
 }
 
 module.exports = old(Client)
+
+// HACK: to prevent standard from complaining about not using `regeneratorRuntime`
+const noop = () => regeneratorRuntime; noop()
