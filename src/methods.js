@@ -16,8 +16,8 @@ module.exports = [
   'unconfirmed_txs',
   'num_unconfirmed_txs',
 
-  'tmsp_query',
-  'tmsp_info',
+  'abci_query',
+  'abci_info',
 
   'unsafe_flush_mempool',
   'unsafe_set_config',
