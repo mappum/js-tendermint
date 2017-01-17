@@ -18,6 +18,7 @@ module.exports = [
 
   'abci_query',
   'abci_info',
+  'abci_proof',
 
   'unsafe_flush_mempool',
   'unsafe_set_config',
