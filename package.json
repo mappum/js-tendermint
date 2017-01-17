@@ -11,21 +11,20 @@
     "publish": "npm run source"
   },
   "dependencies": {
+    "browser-request": "^0.3.3",
     "camelcase": "^4.0.0",
-    "concat-stream": "^1.6.0",
     "old": "^0.1.3",
-    "regenerator-runtime": "^0.10.1",
-    "watt": "^3.3.0"
+    "request": "^2.79.0"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
-    "babel-plugin-transform-regenerator": "^6.21.0",
-    "babel-preset-es2015": "^6.18.0"
+    "babel-preset-es2015": "^6.18.0",
+    "tape": "^4.6.3"
+  },
+  "browser": {
+    "request": "browser-request"
   },
   "babel": {
-    "plugins": [
-      "transform-regenerator"
-    ],
     "presets": [
       "es2015"
     ]
