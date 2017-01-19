@@ -29,8 +29,7 @@ class Client {
 
   call (method, args, cb) {
     get({
-      uri: method,
-      baseUrl: this.uri,
+      uri: this.uri + method,
       qs: convertArgs(args),
       json: true
     }, (err, res, data) => {
