@@ -70,10 +70,8 @@ class Client extends EventEmitter {
   }
 
   callWs (method, args, cb) {
-    let params = []
-    for (let k in args) params.push(args[k])
-
     let id = Math.random().toString(36)
+    let params = convertArgs(args)
     if (method === 'subscribe') {
       this.on(id + '#event', cb)
     } else {
