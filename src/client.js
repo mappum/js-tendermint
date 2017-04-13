@@ -49,7 +49,7 @@ class Client extends EventEmitter {
     this.ws.on('data', (data) => {
       data = JSON.parse(data)
       if (!data.id) return
-      this.emit(data.id, data.error || null, data.result)
+      this.emit(data.id, data.error ? Error(data.error) : null, data.result)
     })
   }
 
