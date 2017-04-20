@@ -11,6 +11,7 @@ const pumpify = require('pumpify').obj
 const tendermintMethods = require('./methods.js')
 
 function convertArgs (args) {
+  args = args || {}
   for (let k in args) {
     let v = args[k]
     if (Buffer.isBuffer(v)) {
