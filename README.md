@@ -46,28 +46,28 @@ the following methods are available on the `client` object, each accepting a nod
 - unsubscribe
 
 - status
-- net_info
-- dial_seeds
+- netInfo
+- dialSeeds
 - blockchain
 - genesis
 - block
 - validators
-- dump_consensus_state
-- broadcast_tx_commit
-- broadcast_tx_sync
-- broadcast_tx_async
-- unconfirmed_txs
-- num_unconfirmed_txs
+- dumpConsensusState
+- broadcastTxCommit
+- broadcastTxSync
+- broadcastTxSync
+- unconfirmedTxs
+- numUnconfirmedTxs
 
-- abci_query
-- abci_info
-- abci_proof
+- abciQuery
+- abciInfo
+- abciProof
 
-- unsafe_flush_mempool
-- unsafe_set_config
-- unsafe_start_cpu_profiler
-- unsafe_stop_cpu_profiler
-- unsafe_write_heap_profile
+- unsafeFlushMempool
+- unsafeSetConfig
+- unsafeStartCpuProfiler
+- unsafeStopCpuProfiler
+- unsafeWriteHeapProfile
 ```
 
 more detailed docs about arguments to each method coming soon.
