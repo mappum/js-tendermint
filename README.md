@@ -41,6 +41,7 @@ client.subscribe({ event: 'NewBlock' }, (err, event) => {
 
 the following methods are available on the `client` object, each accepting a nodeback as the last argument:
 
+```
 - subscribe
 - unsubscribe
 
@@ -67,6 +68,7 @@ the following methods are available on the `client` object, each accepting a nod
 - unsafe_start_cpu_profiler
 - unsafe_stop_cpu_profiler
 - unsafe_write_heap_profile
+```
 
 more detailed docs about arguments to each method coming soon.
 
