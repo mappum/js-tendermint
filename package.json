@@ -11,6 +11,7 @@
     "publish": "npm run source"
   },
   "dependencies": {
+    "axios": "^0.17.1",
     "browser-request": "^0.3.3",
     "camelcase": "^4.0.0",
     "ndjson": "^1.5.0",

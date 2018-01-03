@@ -1,7 +1,7 @@
 'use strict'
 
 const EventEmitter = require('events')
-const { get } = require('request')
+const axios = require('axios')
 const url = require('url')
 const old = require('old')
 const camel = require('camelcase')
@@ -56,18 +56,13 @@ class Client extends EventEmitter {
   }
 
   callHttp (method, args, cb) {
-    get({
-      uri: this.uri + method,
-      qs: convertArgs(args),
-      json: true
-    }, (err, res, data) => {
-      if (err) return cb(err)
-      if (res.statusCode !== 200) {
-        let err = `Server responded with status code ${res.statusCode}`
-        return cb(Error(err))
-      }
-      if (data.error) return cb(Error(data.error))
-      cb(null, data.result)
+    axios({
+      url: this.uri + method,
+      params: args
+    }).then(({data}) => {
+      cb(null, data)
+    }, (err) => {
+      return cb(Error(err))
     })
   }
 
