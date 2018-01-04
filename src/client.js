@@ -60,6 +60,7 @@ class Client extends EventEmitter {
       url: this.uri + method,
       params: args
     }).then(({data}) => {
+      if (data.error) return cb(Error(data.error))
       cb(null, data)
     }, (err) => {
       return cb(Error(err))
