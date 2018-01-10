@@ -51,7 +51,7 @@ class Client extends EventEmitter {
     this.ws.on('data', (data) => {
       data = JSON.parse(data)
       if (!data.id) return
-      this.emit(data.id, data.error ? Error(data.error) : null, data.result)
+      this.emit(data.id, data.error, data.result)
     })
   }
 
@@ -60,7 +60,7 @@ class Client extends EventEmitter {
       url: this.uri + method,
       params: args
     }).then(({data}) => {
-      if (data.error) return cb(Error(data.error))
+      if (data.error) return cb(data.error)
       cb(null, data)
     }, (err) => {
       return cb(Error(err))
@@ -72,6 +72,7 @@ class Client extends EventEmitter {
     let params = convertArgs(args)
     if (method === 'subscribe') {
       this.on(id + '#event', cb)
+      this.once(id, cb) // errors won't have "#event"
     } else {
       this.once(id, cb)
     }
