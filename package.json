@@ -12,12 +12,18 @@
   },
   "dependencies": {
     "axios": "^0.17.1",
+    "bn.js": "^4.11.8",
     "browser-request": "^0.3.3",
     "camelcase": "^4.0.0",
+    "create-hash": "^1.1.3",
+    "ed25519-supercop": "^1.0.2",
+    "json-stable-stringify": "^1.0.1",
     "ndjson": "^1.5.0",
     "old": "^0.1.3",
     "pumpify": "^1.3.5",
     "request": "^2.79.0",
+    "supercop.js": "^2.0.1",
+    "varstruct": "^6.1.1",
     "websocket-stream": "^3.3.3"
   },
   "devDependencies": {
@@ -26,7 +32,8 @@
     "tape": "^4.6.3"
   },
   "browser": {
-    "request": "browser-request"
+    "request": "browser-request",
+    "ed25519-supercop": "supercop.js"
   },
   "babel": {
     "presets": [
