@@ -49,6 +49,34 @@ let TreeHashInput = struct([
   { name: 'right', type: VarBuffer }
 ])
 
+let PubKey = {
+  decode(buffer, start = 0, end = buffer.length) {
+    throw Error('Decode not implemented')
+  },
+  encode(pub, buffer, offset = 0) {
+    let length = PubKey.encodingLength(pub)
+    buffer = buffer || Buffer.alloc(length)
+    if (pub == null) {
+      buffer[offset] = 0
+    } else {
+      buffer[offset] = 1
+      Buffer.from(pub.data, 'hex').copy(buffer, offset + 1)
+    }
+    PubKey.encode.bytes = length
+    return buffer
+  },
+  encodingLength(pub) {
+    if (pub == null) return 1
+    return 33
+  }
+}
+
+let ValidatorHashInput = struct([
+  { name: 'address', type: VarHexBuffer },
+  { name: 'pub_key', type: PubKey },
+  { name: 'voting_power', type: Int64BE }
+])
+
 module.exports = {
   VarInt,
   VarString,
@@ -57,5 +85,7 @@ module.exports = {
   Time,
   BlockID,
   TreeHashInput,
+  ValidatorHashInput,
+  PubKey,
   Int64BE
 }

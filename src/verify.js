@@ -1,7 +1,10 @@
 let stringify = require('json-stable-stringify')
 let ed25519 = require('ed25519-supercop')
-let createHash = require('create-hash')
-let getBlockHash = require('./blockHash.js')
+let {
+  getBlockHash,
+  getValidatorSetHash
+} = require('./hash.js')
+let getAddress = require('./address.js')
 
 // gets the serialized representation of a vote, which is used
 // in the commit signatures
@@ -150,10 +153,9 @@ function verifyCommitSigs (header, commit, validators) {
 // and hashes to the correct value
 function verifyValidatorSet (validators, expectedHash) {
   for (let validator of validators) {
-    // TODO:
-    // if (getAddress(validator.pub_key) !== validator.address) {
-    //   throw Error('Validator address does not match pubkey')
-    // }
+    if (getAddress(validator.pub_key) !== validator.address) {
+      throw Error('Validator address does not match pubkey')
+    }
 
     verifyPositiveInt(validator.voting_power)
     if (validator.voting_power === 0) {
@@ -161,11 +163,10 @@ function verifyValidatorSet (validators, expectedHash) {
     }
   }
 
-  // TODO:
-  // let validatorSetHash = getValidatorSetHash(validators)
-  // if (getValidatorSetHash !== expectedHash) {
-  //   throw Error('Validator set does not match what we expected')
-  // }
+  let validatorSetHash = getValidatorSetHash(validators)
+  if (validatorSetHash !== expectedHash) {
+    throw Error('Validator set does not match what we expected')
+  }
 }
 
 // verifies transition from one block to a higher one, given

@@ -6,6 +6,8 @@ let {
   Time,
   BlockID,
   TreeHashInput,
+  ValidatorHashInput,
+  PubKey,
   Int64BE
 } = require('./types.js')
 
@@ -32,6 +34,16 @@ function getBlockHash (header) {
   return treeHash(hashes).toString('hex').toUpperCase()
 }
 
+function getValidatorSetHash (validators) {
+  let hashes = validators.map(validatorHash)
+  return treeHash(hashes).toString('hex').toUpperCase()
+}
+
+function validatorHash (validator) {
+  let bytes = ValidatorHashInput.encode(validator)
+  return ripemd160(bytes)
+}
+
 function kvHash (key, type, value) {
   let valueBytes = type.encode(value)
   let bytes = Buffer.concat([
@@ -54,4 +66,8 @@ function ripemd160 (data) {
   return createHash('ripemd160').update(data).digest()
 }
 
-module.exports = getBlockHash
+module.exports = {
+  getBlockHash,
+  getValidatorSetHash,
+  ripemd160
+}
