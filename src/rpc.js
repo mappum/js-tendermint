@@ -55,39 +55,58 @@ class Client extends EventEmitter {
     })
   }
 
-  callHttp (method, args, cb) {
-    axios({
+  callHttp (method, args) {
+    return axios({
       url: this.uri + method,
       params: args
-    }).then(({data}) => {
-      if (data.error) return cb(data.error)
-      cb(null, data)
-    }, (err) => {
-      return cb(Error(err))
+    }).then(function ({ data }) {
+      if (data.error) throw Error(data.error)
+      return data
+    }, function (err) {
+      throw Error(err)
     })
   }
 
-  callWs (method, args, cb) {
-    let id = Math.random().toString(36)
-    let params = convertArgs(args)
-    if (method === 'subscribe') {
-      this.on(id + '#event', cb)
-      this.once(id, cb) // errors won't have "#event"
-    } else {
-      this.once(id, cb)
-    }
-    this.ws.write({ jsonrpc: '2.0', id, method, params })
+  callWs (method, args, listener) {
+    let self = this
+    return new Promise((resolve, reject) => {
+      let id = Math.random().toString(36)
+      let params = convertArgs(args)
+
+      if (method === 'subscribe') {
+        // events get passed to listener
+        this.on(id + '#event', (err, res) => {
+          if (err) return self.emit('error', err)
+          listener(res.data.data)
+        })
+
+        // promise resolves on successful subscription or error
+        this.on(id, (err) => {
+          if (err) return reject(err)
+          resolve()
+        })
+      } else {
+        // response goes to promise
+        this.once(id, (err, res) => {
+          if (err) return reject(err)
+          resolve(res)
+        })
+      }
+
+      this.ws.write({ jsonrpc: '2.0', id, method, params })
+    })
+  }
+
+  close () {
+    if (!this.ws) return
+    this.ws.destroy()
   }
 }
 
 // add methods to Client class based on methods defined in './methods.js'
 for (let name of tendermintMethods) {
-  Client.prototype[camel(name)] = function (args, cb) {
-    if (!cb) {
-      cb = args
-      args = null
-    }
-    return this.call(name, args, cb)
+  Client.prototype[camel(name)] = function (args, listener) {
+    return this.call(name, args, listener)
   }
 }
 

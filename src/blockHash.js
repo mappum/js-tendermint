@@ -1,10 +1,12 @@
+let createHash = require('create-hash')
 let {
   VarInt,
   VarString,
   VarHexBuffer,
   Time,
   BlockID,
-  TreeHashInput
+  TreeHashInput,
+  Int64BE
 } = require('./types.js')
 
 const blockHashFields = [

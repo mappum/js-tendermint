@@ -15,6 +15,7 @@ module.exports = [
   'broadcast_tx_async',
   'unconfirmed_txs',
   'num_unconfirmed_txs',
+  'commit',
 
   'abci_query',
   'abci_info',

@@ -89,12 +89,12 @@ function verifyCommit (header, commit, validators) {
     }
   }
 
-  verifyCommitSigs(commit, validators)
+  verifyCommitSigs(header, commit, validators)
 }
 
 // verifies a commit is signed by at least 2/3+ of the voting
 // power of the given validator set
-function verifyCommitSigs (commit, validators) {
+function verifyCommitSigs (header, commit, validators) {
   let committedVotingPower = 0
   let countedValidators = new Array(validators.length)
 
@@ -111,7 +111,13 @@ function verifyCommitSigs (commit, validators) {
     let signBytes = getVoteSignBytes(header.chain_id, precommit)
 
     let validator = validatorsByAddress[precommit.validator_address]
-    if (!validator) continue // skip if this validator isn't in the set
+
+    // skip if this validator isn't in the set
+    // (we allow precommits from validators not in the set,
+    // because we sometimes check the commit against older
+    // validator sets)
+    if (!validator) continue
+
     let pubKey = validator.pub_key.data
 
     // TODO: support secp256k1 sigs
@@ -162,8 +168,36 @@ function verifyValidatorSet (validators, expectedHash) {
   // }
 }
 
-module.exports = {
+// verifies transition from one block to a higher one, given
+// each block's header, commit, and validator set
+function verify (oldState, newState) {
+  if (newState.header.chain_id !== oldState.header.chain_id) {
+    throw Error('Chain IDs do not match')
+  }
+  if (newState.header.height <= oldState.header.height) {
+    throw Error('New state height must be higher than old state height')
+  }
+
+  let validatorSetChanged = newState.header.validators_hash !== oldState.header.validators_hash
+
+  // make sure new header has a valid commit
+  let validators = validatorSetChanged ?
+    newState.validators : oldState.validators
+  verifyCommit(newState.header, newState.commit, validators)
+
+  if (validatorSetChanged) {
+    // make sure new validator set has correct hash
+    verifyValidatorSet(newState.validators, newState.header.validators_hash)
+
+    // make sure new commit is signed by 2/3+ of old validator set
+    verifyCommitSigs(newState.header, newState.commit, oldState.validators)
+  }
+}
+
+module.exports = verify
+Object.assign(module.exports, {
   verifyCommit,
   verifyCommitSigs,
-  verifyValidatorSet
-}
+  verifyValidatorSet,
+  verify
+})

@@ -1,3 +1,4 @@
+let BN = require('bn.js')
 let struct = require('varstruct')
 let { Int64BE } = struct
 let VarInt = require('./varint.js')
@@ -55,5 +56,6 @@ module.exports = {
   VarHexBuffer,
   Time,
   BlockID,
-  TreeHashInput
+  TreeHashInput,
+  Int64BE
 }
