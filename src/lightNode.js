@@ -38,7 +38,7 @@ class LightNode extends EventEmitter {
     this.rpc.on('error', (err) => this.emit('error', err))
     this.on('error', () => this.rpc.close())
 
-    this.synced = this.handleError(this.sync())
+    this.synced = this.handleError(this.initialSync())
   }
 
   handleError (promise) {
@@ -56,7 +56,7 @@ class LightNode extends EventEmitter {
   }
 
   // sync from current state to latest block
-  async sync () {
+  async initialSync () {
     // TODO: use time heuristic (see comment at top of file)
     let status = await this.rpc.status()
     let tip = status.latest_block_height
@@ -70,7 +70,6 @@ class LightNode extends EventEmitter {
 
     this.handleError(this.subscribe())
   }
-
 
   // binary search to find furthest block from our current state,
   // which is signed by 2/3+ voting power of our current validator set
@@ -106,8 +105,13 @@ class LightNode extends EventEmitter {
   // start verifying new blocks as they come in
   async subscribe () {
     let query = 'tm.event = \'NewBlockHeader\''
-    await this.rpc.subscribe({ query }, ({ header }) => {
-      this.handleError(this.handleHeader(header))
+    let syncing = false
+    await this.rpc.subscribe({ query }, async ({ header }) => {
+      // don't start another recursive sync if we are in the middle of syncing
+      if (syncing) return
+      syncing = true
+      await this.handleError(this.syncTo(header.height))
+      syncing = false
     })
   }
 
