@@ -28,10 +28,19 @@ class LightNode extends EventEmitter {
     // 30 days of 1s blocks
     this.maxAge = opts.maxAge || 30 * 24 * 60 * 60
 
+
+    if (typeof state.header.height !== 'number') {
+      throw Error('Expected state header to have a height')
+    }
+
     // we should be able to trust this state since it was either
     // hardcoded into the client, or previously verified/stored,
-    // but it doesn't hurt to do a sanity check
-    verifyCommit(state.header, state.commit, state.validators)
+    // but it doesn't hurt to do a sanity check. not required
+    // for first block, since we might be deriving it from genesis
+    if (state.header.height > 1) {
+      verifyCommit(state.header, state.commit, state.validators)
+    }
+
     this._state = state
 
     this.rpc = RpcClient(peer)

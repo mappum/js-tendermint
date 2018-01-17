@@ -4,7 +4,7 @@ let {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
-let getAddress = require('./address.js')
+let getValidatorAddress = require('./address.js')
 
 // gets the serialized representation of a vote, which is used
 // in the commit signatures
@@ -87,7 +87,7 @@ function verifyCommit (header, commit, validators) {
 
     // ensure this precommit references the correct validator
     let validator = validators[precommit.validator_index]
-    if (validator.address !== precommit.validator_address) {
+    if (precommit.validator_address !== getValidatorAddress(validator.pub_key)) {
       throw Error('Precommit address does not match validator')
     }
   }
@@ -153,7 +153,7 @@ function verifyCommitSigs (header, commit, validators) {
 // and hashes to the correct value
 function verifyValidatorSet (validators, expectedHash) {
   for (let validator of validators) {
-    if (getAddress(validator.pub_key) !== validator.address) {
+    if (getValidatorAddress(validator.pub_key) !== validator.address) {
       throw Error('Validator address does not match pubkey')
     }
 
