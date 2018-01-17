@@ -88,7 +88,6 @@ class LightNode extends EventEmitter {
       let res = await this.rpc.validators({ height })
       validators = res.validators
     }
-    console.log('validator set', validators)
 
     let newState = { header, commit, validators }
     verify(this.state, newState)
