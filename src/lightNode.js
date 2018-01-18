@@ -47,12 +47,12 @@ class LightNode extends EventEmitter {
     this.rpc.on('error', (err) => this.emit('error', err))
     this.on('error', () => this.rpc.close())
 
-    this.synced = this.handleError(this.initialSync())
+    this.handleError(this.initialSync())
+      .then(() => this.emit('synced'))
   }
 
   handleError (promise) {
-    promise.catch((err) => this.emit('error', err))
-    return promise
+    return promise.catch((err) => this.emit('error', err))
   }
 
   state () {
