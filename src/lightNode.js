@@ -102,7 +102,6 @@ class LightNode extends EventEmitter {
     } catch (err) {
       let height = this.height()
       if (nextHeight === height + 1) {
-        console.log(err)
         throw Error('Validator set changed too much to verify transition')
       }
 

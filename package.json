@@ -25,9 +25,6 @@
     "varstruct": "^6.1.1",
     "websocket-stream": "^3.3.3"
   },
-  "optionalDependencies": {
-    "ed25519-supercop": "^1.0.2"
-  },
   "devDependencies": {
     "babel-cli": "^6.18.0",
     "babel-preset-es2015": "^6.18.0",
