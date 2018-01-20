@@ -1,10 +1,15 @@
 let stringify = require('json-stable-stringify')
-let ed25519 = require('ed25519-supercop')
 let {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
 let getValidatorAddress = require('./address.js')
+
+let ed25519 = require('supercop.js')
+try {
+  // try to load native version
+  ed25519 = require('ed25519-supercop')
+} catch (err) {}
 
 // gets the serialized representation of a vote, which is used
 // in the commit signatures
@@ -111,8 +116,6 @@ function verifyCommitSigs (header, commit, validators) {
     // skip empty precommits
     if (precommit == null) continue
 
-    let signBytes = getVoteSignBytes(header.chain_id, precommit)
-
     let validator = validatorsByAddress[precommit.validator_address]
 
     // skip if this validator isn't in the set
@@ -121,10 +124,12 @@ function verifyCommitSigs (header, commit, validators) {
     // validator sets)
     if (!validator) continue
 
-    let pubKey = validator.pub_key.data
+    let signature = Buffer.from(precommit.signature.data, 'hex')
+    let signBytes = Buffer.from(getVoteSignBytes(header.chain_id, precommit))
+    let pubKey = Buffer.from(validator.pub_key.data, 'hex')
 
     // TODO: support secp256k1 sigs
-    if (!ed25519.verify(precommit.signature.data, signBytes, pubKey)) {
+    if (!ed25519.verify(signature, signBytes, pubKey)) {
       throw Error('Invalid precommit signature')
     }
 
