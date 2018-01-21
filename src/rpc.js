@@ -61,7 +61,7 @@ class Client extends EventEmitter {
       params: args
     }).then(function ({ data }) {
       if (data.error) throw Error(data.error)
-      return data
+      return data.result
     }, function (err) {
       throw Error(err)
     })
