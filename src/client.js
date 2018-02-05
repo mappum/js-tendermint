@@ -72,7 +72,9 @@ class Client extends EventEmitter {
     let params = convertArgs(args)
     if (method === 'subscribe') {
       this.on(id + '#event', cb)
-      this.once(id, cb) // errors won't have "#event"
+      
+      // errors won't have "#event"
+      this.once(id, (err) => err ? cb(err) : null)
     } else {
       this.once(id, cb)
     }
