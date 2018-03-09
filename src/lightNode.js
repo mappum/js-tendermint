@@ -7,8 +7,11 @@ let {
   verify
 } = require('./verify.js')
 
+const FOUR_HOURS = 4 * 60 * 60 * 1000
+
 // TODO: support multiple peers
 // (multiple connections to listen for headers,
+// get current height from multiple peers before syncing,
 // randomly select peer when requesting data,
 // broadcast txs to many peers)
 
@@ -27,7 +30,6 @@ class LightNode extends EventEmitter {
 
     // 30 days of 1s blocks
     this.maxAge = opts.maxAge || 30 * 24 * 60 * 60
-
 
     if (typeof state.header.height !== 'number') {
       throw Error('Expected state header to have a height')
@@ -67,6 +69,8 @@ class LightNode extends EventEmitter {
   // sync from current state to latest block
   async initialSync () {
     // TODO: use time heuristic (see comment at top of file)
+    // TODO: get tip height from multiple peers and make sure
+    //       they give us similar results
     let status = await this.rpc.status()
     let tip = status.latest_block_height
 
@@ -129,6 +133,15 @@ class LightNode extends EventEmitter {
 
     if (!height) {
       throw Error('Expected header to have height')
+    }
+
+    // ensure timestamp is close to now to prevent attacks
+    // where the peer gets us to do an initial sync to a past height
+    // within the unbonding period, then uses "updates" from the past
+    // after that to bring us up to date
+    let time = new Date(header.time).getTime()
+    if (Math.abs(Date.now() - time) > FOUR_HOURS) {
+      throw Error('Header time differs too much from our system time')
     }
 
     if (commit == null) {

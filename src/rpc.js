@@ -60,7 +60,9 @@ class Client extends EventEmitter {
       url: this.uri + method,
       params: args
     }).then(function ({ data }) {
-      if (data.error) throw Error(JSON.stringify(data.error))
+      if (data.error) {
+        throw Error(JSON.stringify(data.error))
+      }
       return data
     }, function (err) {
       throw Error(err)
