@@ -8,6 +8,7 @@ const camel = require('camelcase')
 const websocket = require('websocket-stream')
 const ndjson = require('ndjson')
 const pumpify = require('pumpify').obj
+const debug = require('debug')('tendermint:rpc')
 const tendermintMethods = require('./methods.js')
 
 function convertArgs (args) {
@@ -108,7 +109,16 @@ class Client extends EventEmitter {
 // add methods to Client class based on methods defined in './methods.js'
 for (let name of tendermintMethods) {
   Client.prototype[camel(name)] = function (args, listener) {
-    return this.call(name, args, listener)
+    if (args) {
+      debug('>>', name, args)
+    } else {
+      debug('>>', name)
+    }
+    return this.call(name, args)
+      .then((res) => {
+        debug('<<', name, res)
+        return res
+      })
   }
 }
 
