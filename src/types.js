@@ -24,10 +24,25 @@ let VarHexBuffer = {
 
 let Time = {
   encode (value) {
-    let date = new Date(value)
-    let time = new BN(date.getTime())
-    time.imuln(1e6)
-    return Buffer.from(time.toString(16), 'hex')
+    let millis = new Date(value).getTime()
+    let seconds = Math.floor(millis / 1000)
+
+    // XXX ghetto, we're pulling the microseconds from the string
+    let micros = +(value.split('.')[1].slice(0, -1)) * 1000
+
+    let buffer = Buffer.alloc(15)
+    // TODO: use js-amino
+
+    buffer[0] = (1 << 3) | 1 // field 1, typ3 1
+    buffer.writeUInt32BE(seconds, 5)
+
+    buffer[9] = (2 << 3) | 5 // field 2, typ3 5
+    Buffer.from(nanoseconds.toString(16), 'hex')
+      .copy(buffer, 10)
+
+    buffer[14] = 4 // terminator
+
+    return buffer
   }
 }
 
@@ -35,13 +50,14 @@ let BlockID = struct([
   {
     name: 'hash',
     type: VarHexBuffer
-  }, {
+  },
+  {
     name: 'parts',
     type: struct([
       { name: 'total', type: VarInt },
       { name: 'hash', type: VarHexBuffer }
     ])
-  },
+  }
 ])
 
 let TreeHashInput = struct([
@@ -49,25 +65,27 @@ let TreeHashInput = struct([
   { name: 'right', type: VarBuffer }
 ])
 
+const pubkeyAminoPrefix = Buffer.from('1624DE6220', 'hex')
 let PubKey = {
-  decode(buffer, start = 0, end = buffer.length) {
+  decode (buffer, start = 0, end = buffer.length) {
     throw Error('Decode not implemented')
   },
-  encode(pub, buffer, offset = 0) {
+  encode (pub, buffer, offset = 0) {
     let length = PubKey.encodingLength(pub)
     buffer = buffer || Buffer.alloc(length)
     if (pub == null) {
       buffer[offset] = 0
     } else {
-      buffer[offset] = 1
-      Buffer.from(pub.data, 'hex').copy(buffer, offset + 1)
+      pubkeyAminoPrefix.copy(buffer, offset)
+      Buffer.from(pub.type, 'hex').copy(buffer, offset + 5)
+      Buffer.from(pub.value, 'base64').copy(buffer, offset + 12)
     }
     PubKey.encode.bytes = length
     return buffer
   },
-  encodingLength(pub) {
+  encodingLength (pub) {
     if (pub == null) return 1
-    return 33
+    return 5 + 7 + 33
   }
 }
 
