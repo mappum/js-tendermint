@@ -39,9 +39,9 @@ class LightNode extends EventEmitter {
     // hardcoded into the client, or previously verified/stored,
     // but it doesn't hurt to do a sanity check. not required
     // for first block, since we might be deriving it from genesis
-    if (state.header.height > 1) {
+    // if (state.header.height > 1) {
       verifyCommit(state.header, state.commit, state.validators)
-    }
+    // }
 
     this._state = state
 
@@ -72,7 +72,7 @@ class LightNode extends EventEmitter {
     // TODO: get tip height from multiple peers and make sure
     //       they give us similar results
     let status = await this.rpc.status()
-    let tip = status.latest_block_height
+    let tip = status.sync_info.latest_block_height
 
     // make sure we aren't syncing from longer than than the unbonding period
     if (tip - this.height() > this.maxAge) {
@@ -87,7 +87,8 @@ class LightNode extends EventEmitter {
   // binary search to find furthest block from our current state,
   // which is signed by 2/3+ voting power of our current validator set
   async syncTo (nextHeight, targetHeight = nextHeight) {
-    let { header, commit } = await this.rpc.commit({ height: nextHeight })
+    let { SignedHeader } = await this.rpc.commit({ height: nextHeight })
+    let { header, commit } = SignedHeader
 
     try {
       // test if this commit is signed by 2/3+ of our old set
@@ -102,14 +103,21 @@ class LightNode extends EventEmitter {
 
       // continue syncing from this point
       return this.syncTo(targetHeight)
-
     } catch (err) {
+      // real error, not just insufficient voting power
+      if (!err.insufficientVotingPower) {
+        throw err
+      }
+
+      // insufficient verifiable voting power,
+      // couldn't verify this header
+
       let height = this.height()
       if (nextHeight === height + 1) {
         throw Error('Validator set changed too much to verify transition')
       }
 
-      // changed too much to verify, try going half as far
+      // let's try going halfway back and see if we can verify
       let midpoint = height + Math.ceil((nextHeight - height) / 2)
       return this.syncTo(midpoint, targetHeight)
     }
@@ -119,7 +127,7 @@ class LightNode extends EventEmitter {
   async subscribe () {
     let query = 'tm.event = \'NewBlockHeader\''
     let syncing = false
-    await this.rpc.subscribe({ query }, async ({ header }) => {
+    await this.rpc.subscribe({ query }, async ({ SignedHeader: { header } }) => {
       // don't start another recursive sync if we are in the middle of syncing
       if (syncing) return
       syncing = true
@@ -146,7 +154,7 @@ class LightNode extends EventEmitter {
 
     if (commit == null) {
       let res = await this.rpc.commit({ height })
-      commit = res.commit
+      commit = res.SignedHeader.commit
     }
 
     let validators = this._state.validators
