@@ -77,6 +77,10 @@ class Client extends EventEmitter {
       let params = convertArgs(args)
 
       if (method === 'subscribe') {
+        if (typeof listener !== 'function') {
+          throw Error('Must provide listener function')
+        }
+
         // events get passed to listener
         this.on(id + '#event', (err, res) => {
           if (err) return self.emit('error', err)
@@ -114,7 +118,7 @@ for (let name of tendermintMethods) {
     } else {
       debug('>>', name)
     }
-    return this.call(name, args)
+    return this.call(name, args, listener)
       .then((res) => {
         debug('<<', name, res)
         return res
