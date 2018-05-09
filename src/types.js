@@ -1,4 +1,3 @@
-let BN = require('bn.js')
 let struct = require('varstruct')
 let { Int64BE } = struct
 let VarInt = require('./varint.js')
@@ -27,8 +26,8 @@ let Time = {
     let millis = new Date(value).getTime()
     let seconds = Math.floor(millis / 1000)
 
-    // XXX ghetto, we're pulling the microseconds from the string
-    let micros = +(value.split('.')[1].slice(0, -1)) * 1000
+    // XXX ghetto, we're pulling the nanoseconds from the string
+    let nanos = +(value.split('.')[1].slice(0, -1))
 
     let buffer = Buffer.alloc(15)
     // TODO: use js-amino
@@ -37,7 +36,7 @@ let Time = {
     buffer.writeUInt32BE(seconds, 5)
 
     buffer[9] = (2 << 3) | 5 // field 2, typ3 5
-    Buffer.from(nanoseconds.toString(16), 'hex')
+    Buffer.from(nanos.toString(16), 'hex')
       .copy(buffer, 10)
 
     buffer[14] = 4 // terminator
@@ -46,19 +45,35 @@ let Time = {
   }
 }
 
-let BlockID = struct([
-  {
-    name: 'hash',
-    type: VarHexBuffer
-  },
-  {
-    name: 'parts',
-    type: struct([
-      { name: 'total', type: VarInt },
-      { name: 'hash', type: VarHexBuffer }
-    ])
+let BlockID = {
+  encode (value) {
+    // empty block id
+    if (!value.hash) {
+      return Buffer.from('1308000404', 'hex')
+    }
+
+    let buffer = Buffer.alloc(49)
+
+    // TODO: actually do amino encoding stuff
+
+    // hash field
+    buffer[0] = 0x0a
+    buffer[1] = 0x14 // length of hash (20)
+    Buffer.from(value.hash, 'hex').copy(buffer, 2)
+
+    // block parts
+    buffer[22] = 0x13
+    buffer[23] = 0x08
+    buffer[24] = 0x02
+    buffer[25] = 0x12
+    buffer[26] = 0x14
+    Buffer.from(value.parts.hash, 'hex').copy(buffer, 27)
+    buffer[47] = 0x04
+    buffer[48] = 0x04
+
+    return buffer
   }
-])
+}
 
 let TreeHashInput = struct([
   { name: 'left', type: VarBuffer },

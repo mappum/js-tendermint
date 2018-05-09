@@ -15,10 +15,6 @@ try {
 // in the commit signatures
 function getVoteSignBytes (chainId, vote) {
   let { height, round, timestamp, type, block_id } = vote
-
-  // normalize time zone
-  timestamp = new Date(timestamp).toISOString()
-
   return Buffer.from(stringify({
     '@chain_id': chainId,
     '@type': 'vote',

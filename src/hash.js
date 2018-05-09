@@ -1,13 +1,12 @@
 let createHash = require('create-hash')
 let {
-  VarInt,
   VarString,
+  VarBuffer,
   VarHexBuffer,
   Time,
   BlockID,
   TreeHashInput,
   ValidatorHashInput,
-  PubKey,
   Int64BE
 } = require('./types.js')
 
@@ -26,35 +25,49 @@ const blockHashFields = [
   [ 'Results', 'last_results_hash', VarHexBuffer ],
   [ 'Evidence', 'evidence_hash', VarHexBuffer ]
 ]
-blockHashFields.sort((a, b) => a[0] < b[0] ? -1 : 1)
+
+// sort fields by hash of name
+for (let field of blockHashFields) {
+  field.push(ripemd160(field[0]))
+}
+blockHashFields.sort((a, b) => a[3].compare(b[3]))
 
 function getBlockHash (header) {
-  let hashes = blockHashFields.map(([ key, jsonKey, type ]) =>
-    kvHash(key, type, header[jsonKey]))
+  let hashes = blockHashFields.map(([ key, jsonKey, type, keyHash ]) => {
+    let hash = kvHash(keyHash, type, header[jsonKey], key)
+    hash.key = key
+    return hash
+  })
   return treeHash(hashes).toString('hex').toUpperCase()
 }
 
 function getValidatorSetHash (validators) {
-  let hashes = validators.map(validatorHash)
+  let hashes = validators.map(getValidatorHash)
   return treeHash(hashes).toString('hex').toUpperCase()
 }
 
-function validatorHash (validator) {
+function getValidatorHash (validator) {
   let bytes = ValidatorHashInput.encode(validator)
   return ripemd160(bytes)
 }
 
-function kvHash (key, type, value) {
-  let valueBytes = type.encode(value)
+function kvHash (keyHash, type, value, key) {
+  let encodedValue = ''
+  if (value || typeof value === 'number') {
+    encodedValue = type.encode(value)
+  }
+  let valueHash = ripemd160(encodedValue)
   let bytes = Buffer.concat([
-    VarString.encode(key),
-    valueBytes
+    VarBuffer.encode(keyHash),
+    VarBuffer.encode(valueHash)
   ])
   return ripemd160(bytes)
 }
 
 function treeHash (hashes) {
-  if (hashes.length === 1) return hashes[0]
+  if (hashes.length === 1) {
+    return hashes[0]
+  }
   let midpoint = Math.ceil(hashes.length / 2)
   let left = treeHash(hashes.slice(0, midpoint))
   let right = treeHash(hashes.slice(midpoint))
@@ -68,6 +81,7 @@ function ripemd160 (data) {
 
 module.exports = {
   getBlockHash,
+  getValidatorHash,
   getValidatorSetHash,
   ripemd160
 }
