@@ -4,7 +4,7 @@
   "description": "A light client which talks to your Tendermint node over RPC",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "standard index.js src/*.js test/*.js && nyc ava",
     "build": "rm -rf lib && babel src -d lib",
     "source": "rm -rf lib && ln -s src lib",
     "prepublish": "npm run build",
@@ -23,12 +23,14 @@
     "request": "^2.79.0",
     "supercop.js": "^2.0.1",
     "varstruct": "^6.1.1",
-    "websocket-stream": "^3.3.3"
+    "websocket-stream": "^5.1.1"
   },
   "devDependencies": {
+    "ava": "^0.25.0",
     "babel-cli": "^6.18.0",
     "babel-preset-es2015": "^6.18.0",
-    "tape": "^4.6.3"
+    "nyc": "^11.8.0",
+    "standard": "^11.0.1"
   },
   "browser": {
     "request": "browser-request",
