@@ -3,7 +3,8 @@ let {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
-let getValidatorAddress = require('./address.js')
+let { PubKey } = require('./types.js')
+let { ripemd160 } = require('./hash.js')
 
 let ed25519 = require('supercop.js')
 try {
@@ -14,11 +15,15 @@ try {
 // gets the serialized representation of a vote, which is used
 // in the commit signatures
 function getVoteSignBytes (chainId, vote) {
-  let { height, round, timestamp, type, block_id } = vote
+  let { height, round, timestamp, type, block_id: blockId } = vote
+
+  // ensure timestamp only has millisecond precision
+  timestamp = new Date(timestamp).toISOString()
+
   return Buffer.from(stringify({
     '@chain_id': chainId,
     '@type': 'vote',
-    block_id,
+    block_id: blockId,
     height,
     round,
     timestamp,
@@ -93,7 +98,7 @@ function verifyCommit (header, commit, validators) {
 
     // ensure this precommit references the correct validator
     let validator = validators[precommit.validator_index]
-    if (precommit.validator_address !== getValidatorAddress(validator.pub_key)) {
+    if (precommit.validator_address !== validator.address) {
       throw Error('Precommit address does not match validator')
     }
   }
@@ -160,7 +165,7 @@ function verifyCommitSigs (header, commit, validators) {
 // and hashes to the correct value
 function verifyValidatorSet (validators, expectedHash) {
   for (let validator of validators) {
-    if (getValidatorAddress(validator.pub_key) !== validator.address) {
+    if (getAddress(validator.pub_key) !== validator.address) {
       throw Error('Validator address does not match pubkey')
     }
 
@@ -189,8 +194,8 @@ function verify (oldState, newState) {
   let validatorSetChanged = newState.header.validators_hash !== oldState.header.validators_hash
 
   // make sure new header has a valid commit
-  let validators = validatorSetChanged ?
-    newState.validators : oldState.validators
+  let validators = validatorSetChanged
+    ? newState.validators : oldState.validators
   verifyCommit(newState.header, newState.commit, validators)
 
   if (validatorSetChanged) {
@@ -200,6 +205,11 @@ function verify (oldState, newState) {
     // make sure new commit is signed by 2/3+ of old validator set
     verifyCommitSigs(newState.header, newState.commit, oldState.validators)
   }
+}
+
+function getAddress (pubkey) {
+  let bytes = PubKey.encode(pubkey)
+  return ripemd160(bytes).toString('hex').toUpperCase()
 }
 
 module.exports = verify
