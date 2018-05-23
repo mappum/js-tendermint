@@ -5,12 +5,8 @@ let {
 } = require('./hash.js')
 let { PubKey } = require('./types.js')
 let { ripemd160 } = require('./hash.js')
-
 let ed25519 = require('supercop.js')
-try {
-  // try to load native version
-  ed25519 = require('ed25519-supercop')
-} catch (err) {}
+// TODO: try to load native ed25519 implementation, fall back to supercop.js
 
 // gets the serialized representation of a vote, which is used
 // in the commit signatures
