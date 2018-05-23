@@ -27,7 +27,11 @@ let Time = {
     let seconds = Math.floor(millis / 1000)
 
     // XXX ghetto, we're pulling the nanoseconds from the string
-    let nanos = +(value.split('.')[1].slice(0, -1))
+    let nanosStr = value
+      .split('.')[1]
+      .slice(0, -1)
+      .padEnd(9, '0')
+    let nanos = Number(nanosStr)
 
     let buffer = Buffer.alloc(15)
     // TODO: use js-amino
@@ -36,8 +40,7 @@ let Time = {
     buffer.writeUInt32BE(seconds, 5)
 
     buffer[9] = (2 << 3) | 5 // field 2, typ3 5
-    Buffer.from(nanos.toString(16), 'hex')
-      .copy(buffer, 10)
+    buffer.writeUInt32BE(nanos, 10)
 
     buffer[14] = 4 // terminator
 
