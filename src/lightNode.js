@@ -20,7 +20,7 @@ const FOUR_HOURS = 4 * 60 * 60 * 1000
 // TODO: use time heuristic to ensure nodes can't DoS by
 // sending fake high heights.
 // (applies to getting height when getting status in `sync()`,
-// and when receiving a block in `handleHeader()`)
+// and when receiving a block in `update()`)
 
 // talks to nodes via RPC and does light-client verification
 // of block headers.
@@ -39,9 +39,9 @@ class LightNode extends EventEmitter {
     // hardcoded into the client, or previously verified/stored,
     // but it doesn't hurt to do a sanity check. not required
     // for first block, since we might be deriving it from genesis
-    // if (state.header.height > 1) {
+    if (state.header.height > 1 || state.commit != null) {
       verifyCommit(state.header, state.commit, state.validators)
-    // }
+    }
 
     this._state = state
 
@@ -49,12 +49,15 @@ class LightNode extends EventEmitter {
     this.rpc.on('error', (err) => this.emit('error', err))
     this.on('error', () => this.rpc.close())
 
-    this.handleError(this.initialSync())
+    this.handleError(this.initialSync)()
       .then(() => this.emit('synced'))
   }
 
-  handleError (promise) {
-    return promise.catch((err) => this.emit('error', err))
+  handleError (func) {
+    return (...args) => {
+      return func.call(this, ...args)
+        .catch((err) => this.emit('error', err))
+    }
   }
 
   state () {
@@ -81,7 +84,7 @@ class LightNode extends EventEmitter {
 
     await this.syncTo(tip)
 
-    this.handleError(this.subscribe())
+    this.handleError(this.subscribe)()
   }
 
   // binary search to find furthest block from our current state,
@@ -96,7 +99,7 @@ class LightNode extends EventEmitter {
       verifyCommitSigs(header, commit, this._state.validators)
 
       // verifiable, let's update
-      await this.handleHeader(header, commit)
+      await this.update(header, commit)
 
       // reached target
       if (nextHeight === targetHeight) return
@@ -127,16 +130,16 @@ class LightNode extends EventEmitter {
   async subscribe () {
     let query = 'tm.event = \'NewBlockHeader\''
     let syncing = false
-    await this.rpc.subscribe({ query }, async ({ SignedHeader: { header } }) => {
+    await this.rpc.subscribe({ query }, this.handleError(async ({ header }) => {
       // don't start another recursive sync if we are in the middle of syncing
       if (syncing) return
       syncing = true
-      await this.handleError(this.syncTo(header.height))
+      await this.syncTo(header.height)
       syncing = false
-    })
+    }))
   }
 
-  async handleHeader (header, commit) {
+  async update (header, commit) {
     let { height } = header
 
     if (!height) {
