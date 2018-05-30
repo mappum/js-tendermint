@@ -95,15 +95,15 @@ let PubKey = {
       buffer[offset] = 0
     } else {
       pubkeyAminoPrefix.copy(buffer, offset)
-      Buffer.from(pub.type, 'hex').copy(buffer, offset + 5)
-      Buffer.from(pub.value, 'base64').copy(buffer, offset + 12)
+      Buffer.from(pub.value, 'base64')
+        .copy(buffer, offset + pubkeyAminoPrefix.length)
     }
     PubKey.encode.bytes = length
     return buffer
   },
   encodingLength (pub) {
     if (pub == null) return 1
-    return 5 + 7 + 33
+    return 37
   }
 }
 
