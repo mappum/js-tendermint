@@ -4,6 +4,7 @@ let RpcClient = require('./rpc.js')
 let {
   verifyCommit,
   verifyCommitSigs,
+  verifyValidatorSet,
   verify
 } = require('./verify.js')
 
@@ -40,6 +41,7 @@ class LightNode extends EventEmitter {
     // but it doesn't hurt to do a sanity check. not required
     // for first block, since we might be deriving it from genesis
     if (state.header.height > 1 || state.commit != null) {
+      verifyValidatorSet(state.validators, state.header.validators_hash)
       verifyCommit(state.header, state.commit, state.validators)
     }
 
