@@ -29,8 +29,8 @@ class LightNode extends EventEmitter {
   constructor (peer, state, opts = {}) {
     super()
 
-    // 30 days of 1s blocks
-    this.maxAge = opts.maxAge || 30 * 24 * 60 * 60
+    // 30 days
+    this.maxAge = opts.maxAge || 30 * 24 * 60 * 60 * 1000
 
     if (typeof state.header.height !== 'number') {
       throw Error('Expected state header to have a height')
@@ -78,14 +78,7 @@ class LightNode extends EventEmitter {
     //       they give us similar results
     let status = await this.rpc.status()
     let tip = status.sync_info.latest_block_height
-
-    // make sure we aren't syncing from longer than than the unbonding period
-    if (tip - this.height() > this.maxAge) {
-      throw Error('Our state is too old, cannot update safely')
-    }
-
     await this.syncTo(tip)
-
     this.handleError(this.subscribe)()
   }
 
@@ -148,13 +141,16 @@ class LightNode extends EventEmitter {
       throw Error('Expected header to have height')
     }
 
-    // ensure timestamp is close to now to prevent attacks
-    // where the peer gets us to do an initial sync to a past height
-    // within the unbonding period, then uses "updates" from the past
-    // after that to bring us up to date
-    let time = new Date(header.time).getTime()
-    if (Math.abs(Date.now() - time) > FOUR_HOURS) {
-      throw Error('Header time differs too much from our system time')
+    // make sure we aren't syncing from longer than than the unbonding period
+    let prevTime = new Date(this._state.header.time).getTime()
+    if (Date.now() - prevTime > this.maxAge) {
+      throw Error('Our state is too old, cannot update safely')
+    }
+
+    // make sure new commit isn't too far in the future
+    let nextTime = new Date(header.time).getTime()
+    if (nextTime - Date.now() > FOUR_HOURS) {
+      throw Error('Header time is too far in the future')
     }
 
     if (commit == null) {
