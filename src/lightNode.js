@@ -8,7 +8,9 @@ let {
   verify
 } = require('./verify.js')
 
-const FOUR_HOURS = 4 * 60 * 60 * 1000
+const HOUR = 60 * 60 * 1000
+const FOUR_HOURS = 4 * HOUR
+const THIRTY_DAYS = 30 * 24 * HOUR
 
 // TODO: support multiple peers
 // (multiple connections to listen for headers,
@@ -29,8 +31,7 @@ class LightNode extends EventEmitter {
   constructor (peer, state, opts = {}) {
     super()
 
-    // 30 days
-    this.maxAge = opts.maxAge || 30 * 24 * 60 * 60 * 1000
+    this.maxAge = opts.maxAge || THIRTY_DAYS
 
     if (typeof state.header.height !== 'number') {
       throw Error('Expected state header to have a height')
