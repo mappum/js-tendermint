@@ -107,7 +107,38 @@ let PubKey = {
   }
 }
 
-let ValidatorHashInput = struct([
+let ValidatorHashInput = {
+  decode (buffer, start = 0, end = buffer.length) {
+    throw Error('Decode not implemented')
+  },
+  encode (validator) {
+    let buffer = Buffer.alloc(70)
+
+    // address field
+    buffer[0] = 0x0a
+    buffer[1] = 0x14
+    let address = Buffer.from(validator.address, 'hex')
+    address.copy(buffer, 2)
+
+    // pubkey field
+    buffer[22] = 0x17
+    PubKey.encode(validator.pub_key, buffer, 23)
+
+    // voting power field
+    buffer[60] = 0x19
+    Int64BE.encode(validator.voting_power, buffer, 61)
+
+    // terminator
+    buffer[69] = 0x04
+
+    ValidatorHashInput.encode.bytes = 70
+    return buffer
+  },
+  encodingLength (validator) {
+    return 70
+  }
+}
+struct([
   { name: 'address', type: VarHexBuffer },
   { name: 'pub_key', type: PubKey },
   { name: 'voting_power', type: Int64BE }
