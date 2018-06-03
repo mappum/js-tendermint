@@ -8,7 +8,8 @@
     "build": "rm -rf lib && babel src -d lib",
     "source": "rm -rf lib && ln -s src lib",
     "prepublish": "npm run build",
-    "publish": "npm run source"
+    "publish": "npm run source",
+    "generateFixtures": "go run test/fixtures/generate.go"
   },
   "dependencies": {
     "axios": "^0.17.1",
