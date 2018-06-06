@@ -23,15 +23,17 @@ let VarHexBuffer = {
 
 let Time = {
   encode (value) {
+    if (value[value.length - 1] !== 'Z') {
+      throw Error('Timestamp must be UTC timezone')
+    }
+
     let millis = new Date(value).getTime()
     let seconds = Math.floor(millis / 1000)
 
-    // XXX ghetto, we're pulling the nanoseconds from the string
-    let nanosStr = value
-      .split('.')[1]
-      .slice(0, -1)
-      .padEnd(9, '0')
-    let nanos = Number(nanosStr)
+    // ghetto, we're pulling the nanoseconds from the string
+    let withoutZone = value.slice(0, -1)
+    let nanosStr = withoutZone.split('.')[1] || ''
+    let nanos = Number(nanosStr.padEnd(9, '0'))
 
     let buffer = Buffer.alloc(15)
     // TODO: use js-amino
