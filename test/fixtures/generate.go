@@ -18,8 +18,6 @@ var varintValues = []int64{
 	256,
 	100000,
 	// 10000000000, TODO: fix encoding
-	-1,
-	-1000,
 }
 
 type encoding struct {

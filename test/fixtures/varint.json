@@ -18,13 +18,5 @@
   {
     "value": 100000,
     "encoding": "c09a0c"
-  },
-  {
-    "value": -1,
-    "encoding": "01"
-  },
-  {
-    "value": -1000,
-    "encoding": "cf0f"
   }
 ]
