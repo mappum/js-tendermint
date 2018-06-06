@@ -5,6 +5,7 @@ function decode (buffer, start = 0, end = buffer.length) {
 }
 
 function encode (n, buffer = Buffer.alloc(encodingLength(n)), offset = 0) {
+  n *= 2
   let i = 0
   while (n >= 0x80) {
     buffer[offset + i] = (n & 0xff) | 0x80
@@ -18,7 +19,7 @@ function encode (n, buffer = Buffer.alloc(encodingLength(n)), offset = 0) {
 
 function encodingLength (n) {
   if (n < 0 || n > Number.MAX_SAFE_INTEGER) {
-    throw new Error('varint value is out of bounds')
+    throw Error('varint value is out of bounds')
   }
   let bits = Math.log2(n + 1)
   return Math.ceil(bits / 7) || 1
