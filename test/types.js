@@ -30,6 +30,7 @@ test('VarHexBuffer', (t) => {
 })
 
 test('Time', (t) => {
+  // TODO: failure case
   for (let { value, encoding } of timeFixtures) {
     let actual = Time.encode(value).toString('hex')
     t.is(actual, encoding, `encode ${value}`)

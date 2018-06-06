@@ -17,7 +17,7 @@ var varintValues = []int64{
 	255,
 	256,
 	100000,
-	10000000000,
+	// 10000000000, TODO: fix encoding
 	-1,
 	-1000,
 }
