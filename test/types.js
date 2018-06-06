@@ -7,7 +7,7 @@ let {
   ValidatorHashInput
 } = require('../lib/types.js')
 
-// TODO: generate fixtures from golang
+let timeFixtures = require('./fixtures/time.json')
 
 function EncodeTest (t, type) {
   return (value, expected) => {
@@ -21,7 +21,7 @@ test('VarHexBuffer', (t) => {
   let data = '0001020304050607'
   let output = Buffer.alloc(9)
   VarHexBuffer.encode(data, output, 0)
-  t.is(output.toString('hex'), '080001020304050607')
+  t.is(output.toString('hex'), '100001020304050607')
   t.is(VarHexBuffer.encode.bytes, 9)
 
   // encodingLength
@@ -30,27 +30,10 @@ test('VarHexBuffer', (t) => {
 })
 
 test('Time', (t) => {
-  let encodeTest = EncodeTest(t, Time)
-  encodeTest(
-    '2018-05-23T00:37:22.036663121Z',
-    '09000000005b04b7c215022f6f5104'
-  )
-  encodeTest(
-    '2018-05-23T02:46:50.290965475Z',
-    '09000000005b04d61a151157c7e304'
-  )
-  encodeTest(
-    '2018-05-23T02:46:53.334239655Z',
-    '09000000005b04d61d1513ec17a704'
-  )
-  encodeTest(
-    '2018-05-23T02:48:14.21187523Z',
-    '09000000005b04d66e150ca0f59e04'
-  )
-  encodeTest(
-    '2018-05-23T02:51:28.42456088Z',
-    '09000000005b04d73015194e48f004'
-  )
+  for (let { value, encoding } of timeFixtures) {
+    let actual = Time.encode(value).toString('hex')
+    t.is(actual, encoding, `encode ${value}`)
+  }
 })
 
 test('BlockID', (t) => {
