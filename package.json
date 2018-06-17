@@ -45,5 +45,18 @@
     "client"
   ],
   "author": "Matt Bell <mappum@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "directories": {
+    "example": "example",
+    "lib": "lib",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mappum/js-tendermint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mappum/js-tendermint/issues"
+  },
+  "homepage": "https://github.com/mappum/js-tendermint#readme"
 }
