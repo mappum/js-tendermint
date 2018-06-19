@@ -24,20 +24,34 @@ function convertArgs (args) {
   return args
 }
 
+const wsProtocols = [ 'ws:', 'wss:' ]
+const httpProtocols = [ 'http:', 'https:' ]
+const allProtocols = wsProtocols.concat(httpProtocols)
+
 class Client extends EventEmitter {
   constructor (uriString = 'localhost:46657') {
     super()
-    let uri = url.parse(uriString)
-    if (uri.protocol !== 'http:' && uri.protocol !== 'ws:') {
+
+    // parse full-node URI
+    let { protocol, hostname, port } = url.parse(uriString)
+
+    // default to http
+    if (!allProtocols.includes(protocol)) {
       uri = url.parse(`http://${uriString}`)
     }
-    if (uri.protocol === 'ws:') {
+
+    // default port
+    if (!port) {
+      port = 26657
+    }
+
+    if (wsProtocols.includes(protocol)) {
       this.websocket = true
-      this.uri = `ws://${uri.hostname}:${uri.port}/websocket`
+      this.uri = `${protocol}//${hostname}:${port}/websocket`
       this.call = this.callWs
       this.connectWs()
-    } else if (uri.protocol === 'http:') {
-      this.uri = `http://${uri.hostname}:${uri.port}/`
+    } else if (httpProtocols.includes(protocol)) {
+      this.uri = `${protocol}//${hostname}:${port}/`
       this.call = this.callHttp
     }
   }
