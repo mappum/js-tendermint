@@ -37,7 +37,10 @@ class Client extends EventEmitter {
 
     // default to http
     if (!allProtocols.includes(protocol)) {
-      uri = url.parse(`http://${uriString}`)
+      let uri = url.parse(`http://${uriString}`)
+      protocol = uri.protocol
+      hostname = uri.hostname
+      port = uri.port
     }
 
     // default port
