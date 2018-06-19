@@ -1,6 +1,6 @@
 {
   "name": "tendermint",
-  "version": "3.1.9",
+  "version": "3.1.10",
   "description": "A light client which talks to your Tendermint node over RPC",
   "main": "index.js",
   "scripts": {
