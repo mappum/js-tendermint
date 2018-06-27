@@ -22,7 +22,7 @@ test('VarHexBuffer', (t) => {
   let data = '0001020304050607'
   let output = Buffer.alloc(9)
   VarHexBuffer.encode(data, output, 0)
-  t.is(output.toString('hex'), '100001020304050607')
+  t.is(output.toString('hex'), '080001020304050607')
   t.is(VarHexBuffer.encode.bytes, 9)
 
   // encodingLength
@@ -68,6 +68,6 @@ test('ValidatorHashInput', (t) => {
       },
       voting_power: 100
     },
-    '0a14135a9cbf8d5037e8b1507ddd3c6637364df6d5eb171624de62203638c440a52cabc174816c65dc1a14d8b8b99fb844cfd1ff2d7f34adf331572119000000000000006404'
+    '0a14135a9cbf8d5037e8b1507ddd3c6637364df6d5eb171624de62203638c440a52cabc174816c65dc1a14d8b8b99fb844cfd1ff2d7f34adf3315721190000000000000064'
   )
 })

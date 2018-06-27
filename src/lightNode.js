@@ -65,7 +65,7 @@ class LightNode extends EventEmitter {
 
   state () {
     // TODO: deep clone
-    return this._state
+    return Object.assign({}, this._state)
   }
 
   height () {
@@ -79,7 +79,9 @@ class LightNode extends EventEmitter {
     //       they give us similar results
     let status = await this.rpc.status()
     let tip = status.sync_info.latest_block_height
-    await this.syncTo(tip)
+    if (tip > this.height()) {
+      await this.syncTo(tip)
+    }
     this.handleError(this.subscribe)()
   }
 
@@ -126,11 +128,20 @@ class LightNode extends EventEmitter {
   async subscribe () {
     let query = 'tm.event = \'NewBlockHeader\''
     let syncing = false
+    let targetHeight = this.height()
     await this.rpc.subscribe({ query }, this.handleError(async ({ header }) => {
-      // don't start another recursive sync if we are in the middle of syncing
+      targetHeight = header.height
+
+      // don't start another sync loop if we are in the middle of syncing
       if (syncing) return
       syncing = true
-      await this.syncTo(header.height)
+
+      // sync one block at a time to target
+      while (this.height() < targetHeight) {
+        await this.syncTo(this.height() + 1)
+      }
+
+      // unlock
       syncing = false
     }))
   }

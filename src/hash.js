@@ -15,13 +15,13 @@ const blockHashFields = [
   [ 'Height', 'height', Int64BE ],
   [ 'Time', 'time', Time ],
   [ 'NumTxs', 'num_txs', Int64BE ],
-  [ 'LastBlockID', 'last_block_id', BlockID ],
   [ 'TotalTxs', 'total_txs', Int64BE ],
+  [ 'LastBlockID', 'last_block_id', BlockID ],
   [ 'LastCommit', 'last_commit_hash', VarHexBuffer ],
   [ 'Data', 'data_hash', VarHexBuffer ],
   [ 'Validators', 'validators_hash', VarHexBuffer ],
-  [ 'Consensus', 'consensus_hash', VarHexBuffer ],
   [ 'App', 'app_hash', VarHexBuffer ],
+  [ 'Consensus', 'consensus_hash', VarHexBuffer ],
   [ 'Results', 'last_results_hash', VarHexBuffer ],
   [ 'Evidence', 'evidence_hash', VarHexBuffer ]
 ]
@@ -34,9 +34,7 @@ blockHashFields.sort((a, b) => a[3].compare(b[3]))
 
 function getBlockHash (header) {
   let hashes = blockHashFields.map(([ key, jsonKey, type, keyHash ]) => {
-    let hash = kvHash(keyHash, type, header[jsonKey], key)
-    hash.key = key
-    return hash
+    return kvHash(keyHash, type, header[jsonKey], key)
   })
   return treeHash(hashes).toString('hex').toUpperCase()
 }
@@ -57,11 +55,10 @@ function kvHash (keyHash, type, value, key) {
     encodedValue = type.encode(value)
   }
   let valueHash = ripemd160(encodedValue)
-  let bytes = Buffer.concat([
+  return ripemd160(
     VarBuffer.encode(keyHash),
     VarBuffer.encode(valueHash)
-  ])
-  return ripemd160(bytes)
+  )
 }
 
 function treeHash (hashes) {
@@ -75,8 +72,10 @@ function treeHash (hashes) {
   return ripemd160(hashInput)
 }
 
-function ripemd160 (data) {
-  return createHash('ripemd160').update(data).digest()
+function ripemd160 (...chunks) {
+  let hash = createHash('ripemd160')
+  for (let data of chunks) hash.update(data)
+  return hash.digest()
 }
 
 module.exports = {

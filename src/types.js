@@ -35,16 +35,13 @@ let Time = {
     let nanosStr = withoutZone.split('.')[1] || ''
     let nanos = Number(nanosStr.padEnd(9, '0'))
 
-    let buffer = Buffer.alloc(15)
-    // TODO: use js-amino
+    let buffer = Buffer.alloc(14)
 
     buffer[0] = (1 << 3) | 1 // field 1, typ3 1
-    buffer.writeUInt32BE(seconds, 5)
+    buffer.writeUInt32LE(seconds, 1)
 
     buffer[9] = (2 << 3) | 5 // field 2, typ3 5
-    buffer.writeUInt32BE(nanos, 10)
-
-    buffer[14] = 4 // terminator
+    buffer.writeUInt32LE(nanos, 10)
 
     return buffer
   }
@@ -54,10 +51,10 @@ let BlockID = {
   encode (value) {
     // empty block id
     if (!value.hash) {
-      return Buffer.from('1308000404', 'hex')
+      return Buffer.from('1200', 'hex')
     }
 
-    let buffer = Buffer.alloc(49)
+    let buffer = Buffer.alloc(48)
 
     // TODO: actually do amino encoding stuff
 
@@ -67,14 +64,13 @@ let BlockID = {
     Buffer.from(value.hash, 'hex').copy(buffer, 2)
 
     // block parts
-    buffer[22] = 0x13
-    buffer[23] = 0x08
-    buffer[24] = 0x02
-    buffer[25] = 0x12
-    buffer[26] = 0x14
-    Buffer.from(value.parts.hash, 'hex').copy(buffer, 27)
-    buffer[47] = 0x04
-    buffer[48] = 0x04
+    buffer[22] = 0x12
+    buffer[23] = 0x18
+    buffer[24] = 0x08
+    buffer[25] = 0x02
+    buffer[26] = 0x12
+    buffer[27] = 0x14
+    Buffer.from(value.parts.hash, 'hex').copy(buffer, 28)
 
     return buffer
   }
@@ -114,7 +110,7 @@ let ValidatorHashInput = {
     throw Error('Decode not implemented')
   },
   encode (validator) {
-    let buffer = Buffer.alloc(70)
+    let buffer = Buffer.alloc(69)
 
     // address field
     buffer[0] = 0x0a
@@ -130,14 +126,11 @@ let ValidatorHashInput = {
     buffer[60] = 0x19
     Int64BE.encode(validator.voting_power, buffer, 61)
 
-    // terminator
-    buffer[69] = 0x04
-
-    ValidatorHashInput.encode.bytes = 70
+    ValidatorHashInput.encode.bytes = 69
     return buffer
   },
   encodingLength (validator) {
-    return 70
+    return 69
   }
 }
 struct([
