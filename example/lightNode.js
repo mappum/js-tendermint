@@ -1,4 +1,4 @@
-let tendermint = require('.')
+let tendermint = require('..')
 
 async function main ({ argv }) {
   let rpcUrl = argv[2] || 'ws://localhost:46657'
