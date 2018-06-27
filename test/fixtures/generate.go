@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/types"
 )
 
 var varintValues = []int64{
@@ -18,6 +19,17 @@ var varintValues = []int64{
 	256,
 	100000,
 	// 10000000000, TODO: fix encoding
+}
+
+var blockIDValues = []types.BlockID{
+	types.BlockID{PartsHeader: types.PartSetHeader{}},
+	types.BlockID{
+		Hash: []byte("01234567890123456789"),
+		PartsHeader: types.PartSetHeader{
+			Hash:  []byte("01234567890123456789"),
+			Total: 1,
+		},
+	},
 }
 
 type encoding struct {
@@ -95,4 +107,11 @@ func main() {
 	}
 	timeFixtures := generateJSON(encode(timeIValues))
 	ioutil.WriteFile("test/fixtures/time.json", timeFixtures, filePerm)
+
+	blockIDIValues := make([]interface{}, len(blockIDValues))
+	for i, v := range blockIDValues {
+		blockIDIValues[i] = v
+	}
+	blockIDFixtures := generateJSON(encode(blockIDIValues))
+	ioutil.WriteFile("test/fixtures/block_id.json", blockIDFixtures, filePerm)
 }

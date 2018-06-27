@@ -8,6 +8,7 @@ let {
 } = require('../lib/types.js')
 
 let timeFixtures = require('./fixtures/time.json')
+let blockIDFixtures = require('./fixtures/block_id.json')
 
 function EncodeTest (t, type) {
   return (value, expected) => {
@@ -38,18 +39,10 @@ test('Time', (t) => {
 })
 
 test('BlockID', (t) => {
-  let encodeTest = EncodeTest(t, BlockID)
-  encodeTest({}, '1308000404')
-  encodeTest(
-    {
-      hash: '9B24D4DE43C0C3CE003B19796B749D56DA3C6C84',
-      parts: {
-        total: 1,
-        hash: '0C6412C6F34FD48E88A9CEE88885342DDEF13719'
-      }
-    },
-    '0a149b24d4de43c0c3ce003b19796b749d56da3c6c8413080212140c6412c6f34fd48e88a9cee88885342ddef137190404'
-  )
+  for (let { value, encoding } of blockIDFixtures) {
+    let actual = BlockID.encode(value).toString('hex')
+    t.is(actual, encoding, `encode ${value}`)
+  }
 })
 
 test('PubKey', (t) => {
