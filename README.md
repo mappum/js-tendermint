@@ -17,12 +17,9 @@ let Tendermint = require('tendermint')
 // some full node's RPC port
 let peer = 'ws://localhost:46657'
 
-// `state` contains information about an older part of the chain which is known
-// to be valid. This cannot be older than the unbonding period, otherwise we
-// cannot safely sync using proof-of-stake. This should either be hardcoded by
-// the app developer as a trusted starting point, manually accepted as
-// trustworthy by the user, or loaded from the last time the user ran the
-// light client.
+// `state` contains a part of the chain we know to be valid. If it's
+// too old, we cannot safely verify the chain and need to get a newer
+// state out-of-band.
 let state = {
   // a header, in the same format as returned by RPC
   // (see http://localhost:46657/commit, under `"header":`)
@@ -39,9 +36,10 @@ let state = {
 
 // options
 let opts = {
-  // the maximum number of blocks we can sync into the future
-  // from our previous state, e.g. the unbonding period
-  maxAge: 1728000 // defaults to 30 days of 1 second blocks
+  // the maximum age of a state to be safely accepted,
+  // e.g. the unbonding period
+  // (in seconds)
+  maxAge: 1728000 // defaults to 30 days
 }
 
 // instantiate client. will automatically start syncing to the latest state of
