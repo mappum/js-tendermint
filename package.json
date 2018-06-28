@@ -4,7 +4,7 @@
   "description": "A light client which talks to your Tendermint node over RPC",
   "main": "index.js",
   "scripts": {
-    "test": "depcheck && standard index.js src/*.js test/*.js && nyc ava",
+    "test": "depcheck && standard index.js src/*.js test/*.js && ava && nyc ava",
     "build": "rm -rf lib && babel src -d lib",
     "source": "rm -rf lib && ln -s src lib",
     "prepublish": "npm run build",
