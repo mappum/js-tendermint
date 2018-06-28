@@ -7,15 +7,18 @@ let {
   BlockID,
   TreeHashInput,
   ValidatorHashInput,
-  Int64BE
+  Int64LE
 } = require('./types.js')
+
+const ripemd160 = hashFunc('ripemd160')
+const sha256 = hashFunc('sha256')
 
 const blockHashFields = [
   [ 'ChainID', 'chain_id', VarString ],
-  [ 'Height', 'height', Int64BE ],
+  [ 'Height', 'height', Int64LE ],
   [ 'Time', 'time', Time ],
-  [ 'NumTxs', 'num_txs', Int64BE ],
-  [ 'TotalTxs', 'total_txs', Int64BE ],
+  [ 'NumTxs', 'num_txs', Int64LE ],
+  [ 'TotalTxs', 'total_txs', Int64LE ],
   [ 'LastBlockID', 'last_block_id', BlockID ],
   [ 'LastCommit', 'last_commit_hash', VarHexBuffer ],
   [ 'Data', 'data_hash', VarHexBuffer ],
@@ -72,15 +75,18 @@ function treeHash (hashes) {
   return ripemd160(hashInput)
 }
 
-function ripemd160 (...chunks) {
-  let hash = createHash('ripemd160')
-  for (let data of chunks) hash.update(data)
-  return hash.digest()
+function hashFunc (algorithm) {
+  return function (...chunks) {
+    let hash = createHash(algorithm)
+    for (let data of chunks) hash.update(data)
+    return hash.digest()
+  }
 }
 
 module.exports = {
   getBlockHash,
   getValidatorHash,
   getValidatorSetHash,
-  ripemd160
+  ripemd160,
+  sha256
 }

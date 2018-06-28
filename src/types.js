@@ -1,5 +1,5 @@
 let struct = require('varstruct')
-let { Int64BE } = struct
+let { Int64LE } = struct
 let VarInt = require('./varint.js')
 
 let VarString = struct.VarString(VarInt)
@@ -81,7 +81,7 @@ let TreeHashInput = struct([
   { name: 'right', type: VarBuffer }
 ])
 
-const pubkeyAminoPrefix = Buffer.from('1624DE6220', 'hex')
+const pubkeyAminoPrefix = Buffer.from('1624DE6420', 'hex')
 let PubKey = {
   decode (buffer, start = 0, end = buffer.length) {
     throw Error('Decode not implemented')
@@ -124,7 +124,7 @@ let ValidatorHashInput = {
 
     // voting power field
     buffer[60] = 0x19
-    Int64BE.encode(validator.voting_power, buffer, 61)
+    Int64LE.encode(validator.voting_power, buffer, 61)
 
     ValidatorHashInput.encode.bytes = 69
     return buffer
@@ -136,7 +136,7 @@ let ValidatorHashInput = {
 struct([
   { name: 'address', type: VarHexBuffer },
   { name: 'pub_key', type: PubKey },
-  { name: 'voting_power', type: Int64BE }
+  { name: 'voting_power', type: Int64LE }
 ])
 
 module.exports = {
@@ -149,5 +149,5 @@ module.exports = {
   TreeHashInput,
   ValidatorHashInput,
   PubKey,
-  Int64BE
+  Int64LE
 }
