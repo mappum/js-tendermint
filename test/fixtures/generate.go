@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/tendermint/go-amino"
+	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/tendermint/types"
 )
 
@@ -32,6 +33,8 @@ var blockIDValues = []types.BlockID{
 	},
 }
 
+var pubkeyValue = crypto.GenPrivKeyEd25519FromSecret([]byte("foo")).PubKey()
+
 type encoding struct {
 	Value    interface{} `json:"value"`
 	Encoding string      `json:"encoding"`
@@ -43,6 +46,10 @@ var timeValues []time.Time
 
 func init() {
 	cdc = amino.NewCodec()
+
+	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
+	cdc.RegisterConcrete(crypto.PubKeyEd25519{},
+		"tendermint/PubKeyEd25519", nil)
 
 	var err error
 	hktTimeZone, err = time.LoadLocation("Hongkong")
@@ -114,4 +121,20 @@ func main() {
 	}
 	blockIDFixtures := generateJSON(encode(blockIDIValues))
 	ioutil.WriteFile("test/fixtures/block_id.json", blockIDFixtures, filePerm)
+
+	pubkeyBytes, err := cdc.MarshalBinaryBare(pubkeyValue)
+	if err != nil {
+		panic(err)
+	}
+	pubkeyFixtures, err := cdc.MarshalJSONIndent(struct {
+		Value    *crypto.PubKey `json:"value"`
+		Encoding string         `json:"encoding"`
+	}{
+		&pubkeyValue,
+		hex.EncodeToString(pubkeyBytes),
+	}, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	ioutil.WriteFile("test/fixtures/pubkey.json", pubkeyFixtures, filePerm)
 }
