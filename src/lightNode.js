@@ -33,9 +33,10 @@ class LightNode extends EventEmitter {
 
     this.maxAge = opts.maxAge || THIRTY_DAYS
 
-    if (typeof state.header.height !== 'number') {
+    if (state.header.height == null) {
       throw Error('Expected state header to have a height')
     }
+    state.header.height = parseInt(state.header.height)
 
     // we should be able to trust this state since it was either
     // hardcoded into the client, or previously verified/stored,
@@ -88,8 +89,9 @@ class LightNode extends EventEmitter {
   // binary search to find furthest block from our current state,
   // which is signed by 2/3+ voting power of our current validator set
   async syncTo (nextHeight, targetHeight = nextHeight) {
-    let { SignedHeader } = await this.rpc.commit({ height: nextHeight })
+    let { SignedHeader } = await this.rpc.commit({ height: `"${nextHeight}"` })
     let { header, commit } = SignedHeader
+    header.height = parseInt(header.height)
 
     try {
       // test if this commit is signed by 2/3+ of our old set
@@ -130,6 +132,7 @@ class LightNode extends EventEmitter {
     let syncing = false
     let targetHeight = this.height()
     await this.rpc.subscribe({ query }, this.handleError(async ({ header }) => {
+      header.height = parseInt(header.height)
       targetHeight = header.height
 
       // don't start another sync loop if we are in the middle of syncing
@@ -166,15 +169,16 @@ class LightNode extends EventEmitter {
     }
 
     if (commit == null) {
-      let res = await this.rpc.commit({ height })
+      let res = await this.rpc.commit({ height: `"${height}"` })
       commit = res.SignedHeader.commit
+      commit.header.height = parseInt(commit.header.height)
     }
 
     let validators = this._state.validators
 
     let validatorSetChanged = header.validators_hash !== this._state.header.validators_hash
     if (validatorSetChanged) {
-      let res = await this.rpc.validators({ height })
+      let res = await this.rpc.validators({ height: `"${height}"` })
       validators = res.validators
     }
 

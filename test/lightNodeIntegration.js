@@ -34,8 +34,8 @@ test('simple light node sync', async (t) => {
   await node.synced()
 
   // get initial state through rpc
-  let commit = await rpc.commit({ height: 1 })
-  let { validators } = await rpc.validators({ height: 1 })
+  let commit = await rpc.commit({ height: '"1"' })
+  let { validators } = await rpc.validators({ height: '"1"' })
   let state = {
     ...commit.SignedHeader,
     validators
@@ -45,10 +45,10 @@ test('simple light node sync', async (t) => {
   let lightNode = LightNode(rpcHost, state)
 
   await new Promise((resolve) => {
-    lightNode.on('synced', resolve)
+    lightNode.once('synced', resolve)
   })
   await new Promise((resolve) => {
-    lightNode.on('update', resolve)
+    lightNode.once('update', resolve)
   })
 
   // TODO: check event data
