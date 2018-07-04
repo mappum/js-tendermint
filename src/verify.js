@@ -165,6 +165,7 @@ function verifyValidatorSet (validators, expectedHash) {
       throw Error('Validator address does not match pubkey')
     }
 
+    validator.voting_power = parseInt(validator.voting_power)
     verifyPositiveInt(validator.voting_power)
     if (validator.voting_power === 0) {
       throw Error('Validator voting power must be > 0')

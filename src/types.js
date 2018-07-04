@@ -133,11 +133,6 @@ let ValidatorHashInput = {
     return 69
   }
 }
-struct([
-  { name: 'address', type: VarHexBuffer },
-  { name: 'pub_key', type: PubKey },
-  { name: 'voting_power', type: Int64LE }
-])
 
 module.exports = {
   VarInt,
