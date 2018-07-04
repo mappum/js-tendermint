@@ -1,5 +1,6 @@
 let test = require('ava')
 let {
+  VarInt,
   VarHexBuffer,
   Time,
   BlockID,
@@ -7,6 +8,7 @@ let {
   ValidatorHashInput
 } = require('../lib/types.js')
 
+let varintFixtures = require('./fixtures/varint.json')
 let timeFixtures = require('./fixtures/time.json')
 let blockIDFixtures = require('./fixtures/block_id.json')
 let pubkeyFixture = require('./fixtures/pubkey.json')
@@ -20,12 +22,19 @@ function EncodeTest (t, type) {
   }
 }
 
+test('VarInt', (t) => {
+  for (let { value, encoding } of varintFixtures) {
+    let actual = VarInt.encode(value).toString('hex')
+    t.is(actual, encoding, `encode ${value}`)
+  }
+})
+
 test('VarHexBuffer', (t) => {
   // encode
   let data = '0001020304050607'
   let output = Buffer.alloc(9)
   VarHexBuffer.encode(data, output, 0)
-  t.is(output.toString('hex'), '080001020304050607')
+  t.is(output.toString('hex'), '100001020304050607')
   t.is(VarHexBuffer.encode.bytes, 9)
 
   // encodingLength
