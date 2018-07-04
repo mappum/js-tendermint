@@ -37,7 +37,7 @@ test('simple light node sync', async (t) => {
   let commit = await rpc.commit({ height: '"1"' })
   let { validators } = await rpc.validators({ height: '"1"' })
   let state = {
-    ...commit.SignedHeader,
+    ...commit.signed_header,
     validators
   }
 

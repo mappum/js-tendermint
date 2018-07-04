@@ -89,8 +89,8 @@ class LightNode extends EventEmitter {
   // binary search to find furthest block from our current state,
   // which is signed by 2/3+ voting power of our current validator set
   async syncTo (nextHeight, targetHeight = nextHeight) {
-    let { SignedHeader } = await this.rpc.commit({ height: `"${nextHeight}"` })
-    let { header, commit } = SignedHeader
+    let { signed_header: { header, commit } } =
+      await this.rpc.commit({ height: `"${nextHeight}"` })
     header.height = parseInt(header.height)
 
     try {
@@ -170,7 +170,7 @@ class LightNode extends EventEmitter {
 
     if (commit == null) {
       let res = await this.rpc.commit({ height: `"${height}"` })
-      commit = res.SignedHeader.commit
+      commit = res.signed_header.commit
       commit.header.height = parseInt(commit.header.height)
     }
 
