@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/tendermint/go-amino"
-	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/types"
 )
 
@@ -34,6 +35,18 @@ var blockIDValues = []types.BlockID{
 }
 
 var pubkeyValue = crypto.GenPrivKeyEd25519FromSecret([]byte("foo")).PubKey()
+
+var validatorHashInput = ValidatorHashInput{
+	pubkeyValue.Address(),
+	pubkeyValue,
+	1234,
+}
+
+type ValidatorHashInput struct {
+	Address     cmn.HexBytes  `json:"address"`
+	PubKey      crypto.PubKey `json:"pub_key"`
+	VotingPower int64         `json:"voting_power"`
+}
 
 type encoding struct {
 	Value    interface{} `json:"value"`
@@ -137,4 +150,17 @@ func main() {
 		panic(err)
 	}
 	ioutil.WriteFile("test/fixtures/pubkey.json", pubkeyFixtures, filePerm)
+
+	validatorHashInputBytes, err := cdc.MarshalBinaryBare(validatorHashInput)
+	if err != nil {
+		panic(err)
+	}
+	validatorHashInputFixtures, err := json.MarshalIndent(encoding{
+		&validatorHashInput,
+		hex.EncodeToString(validatorHashInputBytes),
+	}, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	ioutil.WriteFile("test/fixtures/validator_hash_input.json", validatorHashInputFixtures, filePerm)
 }

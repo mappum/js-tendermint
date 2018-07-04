@@ -10,6 +10,8 @@ let {
 let timeFixtures = require('./fixtures/time.json')
 let blockIDFixtures = require('./fixtures/block_id.json')
 let pubkeyFixture = require('./fixtures/pubkey.json')
+let validatorHashInputFixture = require('./fixtures/validator_hash_input.json')
+validatorHashInputFixture.value.pub_key = pubkeyFixture.value
 
 function EncodeTest (t, type) {
   return (value, expected) => {
@@ -55,14 +57,7 @@ test('PubKey', (t) => {
 test('ValidatorHashInput', (t) => {
   let encodeTest = EncodeTest(t, ValidatorHashInput)
   encodeTest(
-    {
-      address: '135A9CBF8D5037E8B1507DDD3C6637364DF6D5EB',
-      pub_key: {
-        type: 'AC26791624DE60',
-        value: 'NjjEQKUsq8F0gWxl3BoU2Li5n7hEz9H/LX80rfMxVyE='
-      },
-      voting_power: 100
-    },
-    '0a14135a9cbf8d5037e8b1507ddd3c6637364df6d5eb171624de64203638c440a52cabc174816c65dc1a14d8b8b99fb844cfd1ff2d7f34adf3315721196400000000000000'
+    validatorHashInputFixture.value,
+    validatorHashInputFixture.encoding
   )
 })
