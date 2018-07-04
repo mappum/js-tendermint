@@ -4,7 +4,7 @@ let {
   getValidatorSetHash
 } = require('./hash.js')
 let { PubKey } = require('./types.js')
-let { ripemd160 } = require('./hash.js')
+let { tmhash } = require('./hash.js')
 let ed25519 = require('supercop.js')
 // TODO: try to load native ed25519 implementation, fall back to supercop.js
 
@@ -204,8 +204,8 @@ function verify (oldState, newState) {
 }
 
 function getAddress (pubkey) {
-  let bytes = PubKey.encode(pubkey)
-  return ripemd160(bytes).toString('hex').toUpperCase()
+  let bytes = Buffer.from(pubkey.value, 'base64')
+  return tmhash(bytes).toString('hex').toUpperCase()
 }
 
 module.exports = verify

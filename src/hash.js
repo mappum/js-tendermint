@@ -12,6 +12,9 @@ let {
 
 const ripemd160 = hashFunc('ripemd160')
 const sha256 = hashFunc('sha256')
+const tmhash = function (...data) {
+  return sha256(...data).slice(0, 20)
+}
 
 const blockHashFields = [
   [ 'ChainID', 'chain_id', VarString ],
@@ -88,5 +91,6 @@ module.exports = {
   getValidatorHash,
   getValidatorSetHash,
   ripemd160,
-  sha256
+  sha256,
+  tmhash
 }
