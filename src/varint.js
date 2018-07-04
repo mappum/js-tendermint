@@ -5,15 +5,15 @@ function decode (buffer, start = 0, end = buffer.length) {
 }
 
 function encode (n, buffer = Buffer.alloc(encodingLength(n)), offset = 0) {
-  // n *= 2
-  // XXX: amino varint is multiplied by 2 ¯\_(ツ)_/¯
+  n *= 2
+  // amino varint is multiplied by 2 ¯\_(ツ)_/¯
   let i = 0
   while (n >= 0x80) {
     buffer[offset + i] = (n & 0xff) | 0x80
     n >>= 7
     i++
   }
-  buffer[offset + i] = n
+  buffer[offset + i] = n & 0xff
   encode.bytes = i + 1
   return buffer
 }
