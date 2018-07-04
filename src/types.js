@@ -110,7 +110,8 @@ let ValidatorHashInput = {
     throw Error('Decode not implemented')
   },
   encode (validator) {
-    let buffer = Buffer.alloc(69)
+    let length = ValidatorHashInput.encodingLength(validator)
+    let buffer = Buffer.alloc(length)
 
     // address field
     buffer[0] = 0x0a
@@ -119,18 +120,19 @@ let ValidatorHashInput = {
     address.copy(buffer, 2)
 
     // pubkey field
-    buffer[22] = 0x17
-    PubKey.encode(validator.pub_key, buffer, 23)
+    buffer[22] = 0x12
+    buffer[23] = 0x25
+    PubKey.encode(validator.pub_key, buffer, 24)
 
     // voting power field
-    buffer[60] = 0x19
-    Int64LE.encode(validator.voting_power, buffer, 61)
+    buffer[61] = 0x18
+    VarInt.encode(validator.voting_power, buffer, 62)
 
-    ValidatorHashInput.encode.bytes = 69
+    ValidatorHashInput.encode.bytes = length
     return buffer
   },
   encodingLength (validator) {
-    return 69
+    return 62 + VarInt.encodingLength(validator.voting_power)
   }
 }
 
