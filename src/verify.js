@@ -1,28 +1,26 @@
 let stringify = require('json-stable-stringify')
+let ed25519 = require('supercop.js')
+// TODO: try to load native ed25519 implementation, fall back to supercop.js
 let {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
 let { tmhash } = require('./hash.js')
-let ed25519 = require('supercop.js')
-// TODO: try to load native ed25519 implementation, fall back to supercop.js
+let { safeParseInt } = require('./common.js')
 
 // gets the serialized representation of a vote, which is used
 // in the commit signatures
 function getVoteSignBytes (chainId, vote) {
   let { height, round, timestamp, type, block_id: blockId } = vote
 
-  // ensure timestamp only has millisecond precision
-  timestamp = new Date(timestamp).toISOString()
-
   return Buffer.from(stringify({
     '@chain_id': chainId,
     '@type': 'vote',
     block_id: blockId,
-    height,
-    round,
+    height: String(height),
+    round: String(round),
     timestamp,
-    type
+    type: safeParseInt(type)
   }))
 }
 
@@ -55,6 +53,9 @@ function verifyCommit (header, commit, validators) {
   for (let precommit of commit.precommits) {
     // skip empty precommits
     if (precommit == null) continue
+
+    precommit.height = safeParseInt(precommit.height)
+    precommit.round = safeParseInt(precommit.round)
 
     // all fields of block ID must match commit
     if (precommit.block_id.hash !== commit.block_id.hash) {
