@@ -8,6 +8,8 @@ let {
   verify
 } = require('./verify.js')
 
+let { safeParseInt } = require('./common.js')
+
 const HOUR = 60 * 60 * 1000
 const FOUR_HOURS = 4 * HOUR
 const THIRTY_DAYS = 30 * 24 * HOUR
@@ -36,7 +38,7 @@ class LightNode extends EventEmitter {
     if (state.header.height == null) {
       throw Error('Expected state header to have a height')
     }
-    state.header.height = parseInt(state.header.height)
+    state.header.height = safeParseInt(state.header.height)
 
     // we should be able to trust this state since it was either
     // hardcoded into the client, or previously verified/stored,
@@ -50,6 +52,7 @@ class LightNode extends EventEmitter {
     this._state = state
 
     this.rpc = RpcClient(peer)
+    // TODO: ensure we're using websocket
     this.rpc.on('error', (err) => this.emit('error', err))
     this.on('error', () => this.rpc.close())
 
@@ -90,8 +93,8 @@ class LightNode extends EventEmitter {
   // which is signed by 2/3+ voting power of our current validator set
   async syncTo (nextHeight, targetHeight = nextHeight) {
     let { signed_header: { header, commit } } =
-      await this.rpc.commit({ height: `"${nextHeight}"` })
-    header.height = parseInt(header.height)
+      await this.rpc.commit({ height: String(nextHeight) })
+    header.height = safeParseInt(header.height)
 
     try {
       // test if this commit is signed by 2/3+ of our old set
@@ -132,7 +135,7 @@ class LightNode extends EventEmitter {
     let syncing = false
     let targetHeight = this.height()
     await this.rpc.subscribe({ query }, this.handleError(async ({ header }) => {
-      header.height = parseInt(header.height)
+      header.height = safeParseInt(header.height)
       targetHeight = header.height
 
       // don't start another sync loop if we are in the middle of syncing
@@ -169,16 +172,16 @@ class LightNode extends EventEmitter {
     }
 
     if (commit == null) {
-      let res = await this.rpc.commit({ height: `"${height}"` })
+      let res = await this.rpc.commit({ height: String(height) })
       commit = res.signed_header.commit
-      commit.header.height = parseInt(commit.header.height)
+      commit.header.height = safeParseInt(commit.header.height)
     }
 
     let validators = this._state.validators
 
     let validatorSetChanged = header.validators_hash !== this._state.header.validators_hash
     if (validatorSetChanged) {
-      let res = await this.rpc.validators({ height: `"${height}"` })
+      let res = await this.rpc.validators({ height: String(height) })
       validators = res.validators
     }
 
