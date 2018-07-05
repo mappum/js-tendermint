@@ -3,7 +3,6 @@ let {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
-let { PubKey } = require('./types.js')
 let { tmhash } = require('./hash.js')
 let ed25519 = require('supercop.js')
 // TODO: try to load native ed25519 implementation, fall back to supercop.js

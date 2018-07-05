@@ -1,9 +1,9 @@
 let struct = require('varstruct')
 let { Int64LE } = struct
-let VarInt = require('./varint.js')
+let { VarInt, UVarInt } = require('./varint.js')
 
-let VarString = struct.VarString(VarInt)
-let VarBuffer = struct.VarBuffer(VarInt)
+let VarString = struct.VarString(UVarInt)
+let VarBuffer = struct.VarBuffer(UVarInt)
 
 let VarHexBuffer = {
   decode () {
@@ -17,7 +17,7 @@ let VarHexBuffer = {
   },
   encodingLength (value) {
     let length = value.length / 2
-    return length + VarInt.encodingLength(length)
+    return length + UVarInt.encodingLength(length)
   }
 }
 
@@ -138,6 +138,7 @@ let ValidatorHashInput = {
 
 module.exports = {
   VarInt,
+  UVarInt,
   VarString,
   VarBuffer,
   VarHexBuffer,

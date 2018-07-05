@@ -34,7 +34,7 @@ test('VarHexBuffer', (t) => {
   let data = '0001020304050607'
   let output = Buffer.alloc(9)
   VarHexBuffer.encode(data, output, 0)
-  t.is(output.toString('hex'), '100001020304050607')
+  t.is(output.toString('hex'), '080001020304050607')
   t.is(VarHexBuffer.encode.bytes, 9)
 
   // encodingLength

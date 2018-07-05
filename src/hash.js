@@ -1,14 +1,15 @@
 let createHash = require('create-hash')
 let {
+  VarInt,
   VarString,
   VarBuffer,
   VarHexBuffer,
   Time,
   BlockID,
   TreeHashInput,
-  ValidatorHashInput,
-  Int64LE
+  ValidatorHashInput
 } = require('./types.js')
+let { safeParseInt } = require('./common.js')
 
 const sha256 = hashFunc('sha256')
 const tmhash = function (...data) {
@@ -17,14 +18,15 @@ const tmhash = function (...data) {
 
 const blockHashFields = [
   [ 'ChainID', 'chain_id', VarString ],
-  [ 'Height', 'height', Int64LE ],
+  [ 'Height', 'height', VarInt ],
   [ 'Time', 'time', Time ],
-  [ 'NumTxs', 'num_txs', Int64LE ],
-  [ 'TotalTxs', 'total_txs', Int64LE ],
+  [ 'NumTxs', 'num_txs', VarInt ],
+  [ 'TotalTxs', 'total_txs', VarInt ],
   [ 'LastBlockID', 'last_block_id', BlockID ],
   [ 'LastCommit', 'last_commit_hash', VarHexBuffer ],
   [ 'Data', 'data_hash', VarHexBuffer ],
   [ 'Validators', 'validators_hash', VarHexBuffer ],
+  [ 'NextValidators', 'next_validators_hash', VarHexBuffer ],
   [ 'App', 'app_hash', VarHexBuffer ],
   [ 'Consensus', 'consensus_hash', VarHexBuffer ],
   [ 'Results', 'last_results_hash', VarHexBuffer ],
@@ -32,14 +34,15 @@ const blockHashFields = [
 ]
 
 // sort fields by hash of name
-for (let field of blockHashFields) {
-  field.push(tmhash(field[0]))
-}
-blockHashFields.sort((a, b) => a[3].compare(b[3]))
+blockHashFields.sort(([ keyA ], [ keyB ]) => {
+  let bufA = Buffer.from(keyA)
+  let bufB = Buffer.from(keyB)
+  return bufA.compare(bufB)
+})
 
 function getBlockHash (header) {
-  let hashes = blockHashFields.map(([ key, jsonKey, type, keyHash ]) => {
-    return kvHash(keyHash, type, header[jsonKey], key)
+  let hashes = blockHashFields.map(([ key, jsonKey, type ]) => {
+    return kvHash(type, header[jsonKey], key)
   })
   return treeHash(hashes).toString('hex').toUpperCase()
 }
@@ -54,14 +57,17 @@ function getValidatorHash (validator) {
   return tmhash(bytes)
 }
 
-function kvHash (keyHash, type, value, key) {
+function kvHash (type, value, key) {
   let encodedValue = ''
+  if (type === VarInt) {
+    value = safeParseInt(value)
+  }
   if (value || typeof value === 'number') {
     encodedValue = type.encode(value)
   }
   let valueHash = tmhash(encodedValue)
   return tmhash(
-    VarBuffer.encode(keyHash),
+    VarString.encode(key),
     VarBuffer.encode(valueHash)
   )
 }
