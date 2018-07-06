@@ -41,6 +41,7 @@ test('simple light node sync', async (t) => {
     ...commit.signed_header,
     validators
   }
+  rpc.close()
 
   let lightNode = LightNode(rpcHost, state)
 
@@ -52,6 +53,8 @@ test('simple light node sync', async (t) => {
   })
 
   // TODO: check event data
+
+  lightNode.close()
 
   t.pass()
 })

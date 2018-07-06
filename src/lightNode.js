@@ -196,7 +196,6 @@ class LightNode extends EventEmitter {
   }
 
   close () {
-    this.rpc.removeListener('error', this.emitError)
     this.rpc.close()
   }
 }
