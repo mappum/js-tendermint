@@ -1,13 +1,18 @@
 'use strict'
 
+const { safeParseInt } = require('./common.js')
+
 function VarInt (signed) {
   function decode (buffer, start = 0, end = buffer.length) {
     throw Error('not implemented')
   }
 
   function encode (n, buffer = Buffer.alloc(encodingLength(n)), offset = 0) {
+    n = safeParseInt(n)
+
+    // amino signed varint is multiplied by 2 ¯\_(ツ)_/¯
     if (signed) n *= 2
-    // amino varint is multiplied by 2 ¯\_(ツ)_/¯
+
     let i = 0
     while (n >= 0x80) {
       buffer[offset + i] = (n & 0xff) | 0x80

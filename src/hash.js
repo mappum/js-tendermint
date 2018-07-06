@@ -11,7 +11,6 @@ const {
   TreeHashInput,
   ValidatorHashInput
 } = require('./types.js')
-const { safeParseInt } = require('./common.js')
 
 const sha256 = hashFunc('sha256')
 const tmhash = function (...data) {
@@ -61,9 +60,6 @@ function getValidatorHash (validator) {
 
 function kvHash (type, value, key) {
   let encodedValue = ''
-  if (type === VarInt) {
-    value = safeParseInt(value)
-  }
   if (value || typeof value === 'number') {
     encodedValue = type.encode(value)
   }
