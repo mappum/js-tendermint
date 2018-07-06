@@ -92,7 +92,9 @@ class Client extends EventEmitter {
       params: convertHttpArgs(args)
     }).then(function ({ data }) {
       if (data.error) {
-        throw Error(JSON.stringify(data.error))
+        let err = Error(data.error.message)
+        Object.assign(err, data.error)
+        throw err
       }
       return data.result
     }, function (err) {

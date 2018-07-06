@@ -53,8 +53,8 @@ class LightNode extends EventEmitter {
 
     this.rpc = RpcClient(peer)
     // TODO: ensure we're using websocket
-    this.rpc.on('error', (err) => this.emit('error', err))
-    this.on('error', () => this.rpc.close())
+    this.rpc.on('error',
+      (err) => this.emitError(err))
 
     this.handleError(this.initialSync)()
       .then(() => this.emit('synced'))
@@ -63,8 +63,13 @@ class LightNode extends EventEmitter {
   handleError (func) {
     return (...args) => {
       return func.call(this, ...args)
-        .catch((err) => this.emit('error', err))
+        .catch((err) => this.emitError(err))
     }
+  }
+
+  emitError (err) {
+    this.rpc.close()
+    this.emit('error', err)
   }
 
   state () {
