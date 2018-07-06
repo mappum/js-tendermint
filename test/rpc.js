@@ -27,6 +27,8 @@ function createWsServer (port = 26657, onRequest) {
       onRequest(req, send)
     })
   })
+  let close = server.close.bind(server)
+  server.close = () => new Promise(close)
   return server
 }
 
@@ -111,6 +113,20 @@ test('http non-response errors are thrown', async (t) => {
   }
 })
 
+test('ws response error', async (t) => {
+  let port = await getPort()
+  let server = createWsServer(port, (req, res) => res({ message: 'err' }))
+  let rpc = RpcClient(`ws://localhost:${port}`)
+  try {
+    await rpc.commit()
+    t.fail('should have thrown')
+  } catch (err) {
+    t.is(err.message, 'err')
+  }
+  rpc.close()
+  await server.close()
+})
+
 test('ws arg conversion', async (t) => {
   let port = await getPort()
   let server = createWsServer(port, (req, res) => {
@@ -128,11 +144,10 @@ test('ws arg conversion', async (t) => {
   })
   t.is(res, 'bar')
   rpc.close()
-  server.close()
+  await server.close()
 })
 
 test('ws subscription', async (t) => {
-  t.plan(1)
   let port = await getPort()
   let events = []
   let server = createWsServer(port, (req, res) => {
@@ -145,12 +160,15 @@ test('ws subscription', async (t) => {
       `${req.id}#event`)
   })
   let rpc = RpcClient(`ws://localhost:${port}`)
-  await rpc.subscribe({ query: 'foo' }, (event) => {
-    events.push(event)
-    if (events.length < 2) return
-    t.deepEqual(events, [ 'foo', 'bar' ])
-    rpc.close()
-    server.close()
+  await new Promise((resolve) => {
+    rpc.subscribe({ query: 'foo' }, async (event) => {
+      events.push(event)
+      if (events.length < 2) return
+      rpc.close()
+      await server.close()
+      t.deepEqual(events, [ 'foo', 'bar' ])
+      resolve()
+    })
   })
 })
 
@@ -166,6 +184,34 @@ test('ws subscription error', async (t) => {
   } catch (err) {
     t.is(err.code, 123)
     t.is(err.message, 'uh oh')
+  }
+  rpc.close()
+  await server.close()
+})
+
+test('ws disconnect emits error', async (t) => {
+  let port = await getPort()
+  let server = createWsServer(port, (req, res) => res(null, {}))
+  let rpc = RpcClient(`ws://localhost:${port}`)
+  await rpc.status()
+  server.close()
+  await new Promise((resolve) => {
+    rpc.on('error', (err) => {
+      t.is(err.message, 'websocket disconnected')
+      resolve()
+    })
+  })
+})
+
+test('ws subscription requires listener', async (t) => {
+  let port = await getPort()
+  let server = createWsServer(port, (req, res) => res(null, {}))
+  let rpc = RpcClient(`ws://localhost:${port}`)
+  try {
+    await rpc.subscribe('foo')
+    t.fail()
+  } catch (err) {
+    t.is(err.message, 'Must provide listener function')
   }
   rpc.close()
   server.close()
