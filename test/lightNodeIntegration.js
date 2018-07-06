@@ -2,7 +2,7 @@ let test = require('ava')
 let tm = require('tendermint-node')
 let createTempDir = require('tempy').directory
 let getPort = require('get-port')
-let LightNode = require('..')
+let { LightNode, RpcClient } = require('..')
 
 test.beforeEach(async (t) => {
   let home = createTempDir()
@@ -29,19 +29,19 @@ test.afterEach((t) => {
 
 test('simple light node sync', async (t) => {
   let { ports, node } = t.context
-  let { rpc } = node
 
   await node.synced()
 
   // get initial state through rpc
-  let commit = await rpc.commit({ height: '"1"' })
-  let { validators } = await rpc.validators({ height: '"1"' })
+  let rpcHost = `ws://localhost:${ports.rpc}`
+  let rpc = RpcClient(rpcHost)
+  let commit = await rpc.commit({ height: 1 })
+  let { validators } = await rpc.validators({ height: 1 })
   let state = {
     ...commit.signed_header,
     validators
   }
 
-  let rpcHost = `ws://localhost:${ports.rpc}`
   let lightNode = LightNode(rpcHost, state)
 
   await new Promise((resolve) => {

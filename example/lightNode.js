@@ -8,8 +8,8 @@ async function main ({ argv }) {
   // should be hardcoded or manually approved by the user. otherwise,
   // a malicious node or MITM can trivially trick you onto their own chain!
   let rpc = tendermint.RpcClient(rpcUrl)
-  let commit = await rpc.commit({ height: '1' })
-  let { validators } = await rpc.validators({ height: '1' })
+  let commit = await rpc.commit({ height: 1 })
+  let { validators } = await rpc.validators({ height: 1 })
 
   let state = {
     ...commit.signed_header,

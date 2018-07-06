@@ -11,11 +11,24 @@ const pumpify = require('pumpify').obj
 const debug = require('debug')('tendermint:rpc')
 const tendermintMethods = require('./methods.js')
 
-function convertArgs (args) {
+function convertHttpArgs (args) {
   args = args || {}
   for (let k in args) {
     let v = args[k]
-    if (Buffer.isBuffer(v)) {
+    if (typeof v === 'number') {
+      args[k] = `"${v}"`
+    }
+  }
+  return args
+}
+
+function convertWsArgs (args) {
+  args = args || {}
+  for (let k in args) {
+    let v = args[k]
+    if (typeof v === 'number') {
+      args[k] = String(v)
+    } else if (Buffer.isBuffer(v)) {
       args[k] = '0x' + v.toString('hex')
     } else if (v instanceof Uint8Array) {
       args[k] = '0x' + Buffer.from(v).toString('hex')
@@ -29,7 +42,7 @@ const httpProtocols = [ 'http:', 'https:' ]
 const allProtocols = wsProtocols.concat(httpProtocols)
 
 class Client extends EventEmitter {
-  constructor (uriString = 'localhost:46657') {
+  constructor (uriString = 'localhost:26657') {
     super()
 
     // parse full-node URI
@@ -76,7 +89,7 @@ class Client extends EventEmitter {
   callHttp (method, args) {
     return axios({
       url: this.uri + method,
-      params: args
+      params: convertHttpArgs(args)
     }).then(function ({ data }) {
       if (data.error) {
         throw Error(JSON.stringify(data.error))
@@ -91,7 +104,7 @@ class Client extends EventEmitter {
     let self = this
     return new Promise((resolve, reject) => {
       let id = Math.random().toString(36)
-      let params = convertArgs(args)
+      let params = convertWsArgs(args)
 
       if (method === 'subscribe') {
         if (typeof listener !== 'function') {

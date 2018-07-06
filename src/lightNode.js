@@ -82,7 +82,7 @@ class LightNode extends EventEmitter {
     // TODO: get tip height from multiple peers and make sure
     //       they give us similar results
     let status = await this.rpc.status()
-    let tip = status.sync_info.latest_block_height
+    let tip = safeParseInt(status.sync_info.latest_block_height)
     if (tip > this.height()) {
       await this.syncTo(tip)
     }
@@ -93,7 +93,7 @@ class LightNode extends EventEmitter {
   // which is signed by 2/3+ voting power of our current validator set
   async syncTo (nextHeight, targetHeight = nextHeight) {
     let { signed_header: { header, commit } } =
-      await this.rpc.commit({ height: String(nextHeight) })
+      await this.rpc.commit({ height: nextHeight })
     header.height = safeParseInt(header.height)
 
     try {
@@ -153,11 +153,8 @@ class LightNode extends EventEmitter {
   }
 
   async update (header, commit) {
+    header.height = safeParseInt(header.height)
     let { height } = header
-
-    if (!height) {
-      throw Error('Expected header to have height')
-    }
 
     // make sure we aren't syncing from longer than than the unbonding period
     let prevTime = new Date(this._state.header.time).getTime()
@@ -172,7 +169,7 @@ class LightNode extends EventEmitter {
     }
 
     if (commit == null) {
-      let res = await this.rpc.commit({ height: String(height) })
+      let res = await this.rpc.commit({ height })
       commit = res.signed_header.commit
       commit.header.height = safeParseInt(commit.header.height)
     }
@@ -181,7 +178,7 @@ class LightNode extends EventEmitter {
 
     let validatorSetChanged = header.validators_hash !== this._state.header.validators_hash
     if (validatorSetChanged) {
-      let res = await this.rpc.validators({ height: String(height) })
+      let res = await this.rpc.validators({ height })
       validators = res.validators
     }
 
