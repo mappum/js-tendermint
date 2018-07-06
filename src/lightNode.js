@@ -116,17 +116,18 @@ class LightNode extends EventEmitter {
       // continue syncing from this point
       return this.syncTo(targetHeight)
     } catch (err) {
-      // real error, not just insufficient voting power
+      // throw real errors
       if (!err.insufficientVotingPower) {
         throw err
       }
 
-      // insufficient verifiable voting power,
+      // insufficient verifiable voting power error,
       // couldn't verify this header
 
       let height = this.height()
       if (nextHeight === height + 1) {
-        throw Error('Validator set changed too much to verify transition')
+        // should not happen unless peer sends us fake transition
+        throw Error('Could not verify transition')
       }
 
       // let's try going halfway back and see if we can verify

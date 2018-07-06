@@ -167,7 +167,7 @@ function verifyValidatorSet (validators, expectedHash) {
       throw Error('Validator address does not match pubkey')
     }
 
-    validator.voting_power = parseInt(validator.voting_power)
+    validator.voting_power = safeParseInt(validator.voting_power)
     verifyPositiveInt(validator.voting_power)
     if (validator.voting_power === 0) {
       throw Error('Validator voting power must be > 0')
@@ -183,26 +183,43 @@ function verifyValidatorSet (validators, expectedHash) {
 // verifies transition from one block to a higher one, given
 // each block's header, commit, and validator set
 function verify (oldState, newState) {
-  if (newState.header.chain_id !== oldState.header.chain_id) {
+  let oldHeader = oldState.header
+  let oldValidators = oldState.validators
+  let newHeader = newState.header
+  let newValidators = newState.validators
+
+  if (newHeader.chain_id !== oldHeader.chain_id) {
     throw Error('Chain IDs do not match')
   }
-  if (newState.header.height <= oldState.header.height) {
+  if (newHeader.height <= oldHeader.height) {
     throw Error('New state height must be higher than old state height')
   }
 
-  let validatorSetChanged = newState.header.validators_hash !== oldState.header.validators_hash
+  let validatorSetChanged =
+    newHeader.validators_hash !== oldHeader.validators_hash
+  if (validatorSetChanged && newValidators == null) {
+    throw Error('Must specify new validator set')
+  }
 
   // make sure new header has a valid commit
   let validators = validatorSetChanged
-    ? newState.validators : oldState.validators
-  verifyCommit(newState.header, newState.commit, validators)
+    ? newValidators : oldValidators
+  verifyCommit(newHeader, newState.commit, validators)
 
   if (validatorSetChanged) {
-    // make sure new validator set has correct hash
-    verifyValidatorSet(newState.validators, newState.header.validators_hash)
+    // make sure new validator set is valid
 
-    // make sure new commit is signed by 2/3+ of old validator set
-    verifyCommitSigs(newState.header, newState.commit, oldState.validators)
+    // make sure new validator set has correct hash
+    verifyValidatorSet(newValidators, newHeader.validators_hash)
+
+    // if previous state's `next_validators_hash` matches the new validator
+    // set hash, then we already know it is valid
+    if (oldHeader.next_validators_hash !== newHeader.validators_hash) {
+      // otherwise, make sure new commit is signed by 2/3+ of old validator set.
+      // sometimes we will take this path to skip ahead, we don't need any
+      // headers between `oldState` and `newState` if this check passes
+      verifyCommitSigs(newHeader, newState.commit, oldValidators)
+    }
   }
 }
 
