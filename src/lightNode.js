@@ -1,14 +1,15 @@
-let old = require('old')
-let EventEmitter = require('events')
-let RpcClient = require('./rpc.js')
-let {
+'use strict'
+
+const old = require('old')
+const EventEmitter = require('events')
+const RpcClient = require('./rpc.js')
+const {
   verifyCommit,
   verifyCommitSigs,
   verifyValidatorSet,
   verify
 } = require('./verify.js')
-
-let { safeParseInt } = require('./common.js')
+const { safeParseInt } = require('./common.js')
 
 const HOUR = 60 * 60 * 1000
 const FOUR_HOURS = 4 * HOUR
@@ -53,8 +54,8 @@ class LightNode extends EventEmitter {
 
     this.rpc = RpcClient(peer)
     // TODO: ensure we're using websocket
-    this.rpc.on('error',
-      (err) => this.emitError(err))
+    this.emitError = this.emitError.bind(this)
+    this.rpc.on('error', this.emitError)
 
     this.handleError(this.initialSync)()
       .then(() => this.emit('synced'))
@@ -192,6 +193,11 @@ class LightNode extends EventEmitter {
 
     this._state = newState
     this.emit('update', header, commit, validators)
+  }
+
+  close () {
+    this.rpc.removeListener('error', this.emitError)
+    this.rpc.close()
   }
 }
 

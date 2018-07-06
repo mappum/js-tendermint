@@ -1,3 +1,5 @@
+'use strict'
+
 function safeParseInt (nStr) {
   let n = parseInt(nStr)
   if (!Number.isInteger(n)) {

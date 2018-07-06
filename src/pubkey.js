@@ -1,13 +1,15 @@
-let struct = require('varstruct')
-let { ripemd160 } = require('./hash.js')
-let { VarHexBuffer } = require('./types.js')
+'use strict'
 
-let AddressBytes = struct([
+const struct = require('varstruct')
+const { ripemd160 } = require('./hash.js')
+const { VarHexBuffer } = require('./types.js')
+
+const AddressBytes = struct([
   { name: 'type', type: struct.Byte },
   { name: 'key', type: VarHexBuffer }
 ])
 
-let types = {
+const types = {
   'ed25519': 1,
   'secp256k1': 2
 }

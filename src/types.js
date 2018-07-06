@@ -1,11 +1,13 @@
-let struct = require('varstruct')
-let { Int64LE } = struct
-let { VarInt, UVarInt } = require('./varint.js')
+'use strict'
 
-let VarString = struct.VarString(UVarInt)
-let VarBuffer = struct.VarBuffer(UVarInt)
+const struct = require('varstruct')
+const { Int64LE } = struct
+const { VarInt, UVarInt } = require('./varint.js')
 
-let VarHexBuffer = {
+const VarString = struct.VarString(UVarInt)
+const VarBuffer = struct.VarBuffer(UVarInt)
+
+const VarHexBuffer = {
   decode () {
     throw Error('Decode not implemented')
   },
@@ -21,7 +23,7 @@ let VarHexBuffer = {
   }
 }
 
-let Time = {
+const Time = {
   encode (value) {
     if (value[value.length - 1] !== 'Z') {
       throw Error('Timestamp must be UTC timezone')
@@ -47,7 +49,7 @@ let Time = {
   }
 }
 
-let BlockID = {
+const BlockID = {
   encode (value) {
     // empty block id
     if (!value.hash) {
@@ -76,13 +78,13 @@ let BlockID = {
   }
 }
 
-let TreeHashInput = struct([
+const TreeHashInput = struct([
   { name: 'left', type: VarBuffer },
   { name: 'right', type: VarBuffer }
 ])
 
 const pubkeyAminoPrefix = Buffer.from('1624DE6420', 'hex')
-let PubKey = {
+const PubKey = {
   decode (buffer, start = 0, end = buffer.length) {
     throw Error('Decode not implemented')
   },
@@ -105,7 +107,7 @@ let PubKey = {
   }
 }
 
-let ValidatorHashInput = {
+const ValidatorHashInput = {
   decode (buffer, start = 0, end = buffer.length) {
     throw Error('Decode not implemented')
   },

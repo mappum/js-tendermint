@@ -1,5 +1,7 @@
-let createHash = require('create-hash')
-let {
+'use strict'
+
+const createHash = require('create-hash')
+const {
   VarInt,
   VarString,
   VarBuffer,
@@ -9,7 +11,7 @@ let {
   TreeHashInput,
   ValidatorHashInput
 } = require('./types.js')
-let { safeParseInt } = require('./common.js')
+const { safeParseInt } = require('./common.js')
 
 const sha256 = hashFunc('sha256')
 const tmhash = function (...data) {

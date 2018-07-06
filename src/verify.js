@@ -1,12 +1,14 @@
-let stringify = require('json-stable-stringify')
-let ed25519 = require('supercop.js')
+'use strict'
+
+const stringify = require('json-stable-stringify')
+const ed25519 = require('supercop.js')
 // TODO: try to load native ed25519 implementation, fall back to supercop.js
-let {
+const {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
-let { tmhash } = require('./hash.js')
-let { safeParseInt } = require('./common.js')
+const { tmhash } = require('./hash.js')
+const { safeParseInt } = require('./common.js')
 
 // gets the serialized representation of a vote, which is used
 // in the commit signatures
