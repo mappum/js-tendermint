@@ -7,7 +7,7 @@ const {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
-const { tmhash } = require('./hash.js')
+const { getAddress } = require('./pubkey.js')
 const { safeParseInt } = require('./common.js')
 
 // gets the serialized representation of a vote, which is used
@@ -223,15 +223,11 @@ function verify (oldState, newState) {
   }
 }
 
-function getAddress (pubkey) {
-  let bytes = Buffer.from(pubkey.value, 'base64')
-  return tmhash(bytes).toString('hex').toUpperCase()
-}
-
 module.exports = verify
 Object.assign(module.exports, {
   verifyCommit,
   verifyCommitSigs,
   verifyValidatorSet,
-  verify
+  verify,
+  getVoteSignBytes
 })
