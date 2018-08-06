@@ -10,6 +10,7 @@ import (
 
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/types"
 )
@@ -35,7 +36,7 @@ var blockIDValues = []types.BlockID{
 	},
 }
 
-var pubkeyValue = crypto.GenPrivKeyEd25519FromSecret([]byte("foo")).PubKey()
+var pubkeyValue = ed25519.GenPrivKeyFromSecret([]byte("foo")).PubKey()
 
 var validatorHashInput = ValidatorHashInput{
 	pubkeyValue.Address(),
@@ -62,7 +63,7 @@ func init() {
 	cdc = amino.NewCodec()
 
 	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
-	cdc.RegisterConcrete(crypto.PubKeyEd25519{},
+	cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
 		"tendermint/PubKeyEd25519", nil)
 
 	var err error
