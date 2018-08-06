@@ -127,7 +127,7 @@ function verifyCommitSigs (header, commit, validators) {
     // validator sets)
     if (!validator) continue
 
-    let signature = Buffer.from(precommit.signature.value, 'base64')
+    let signature = Buffer.from(precommit.signature, 'base64')
     let signBytes = getVoteSignBytes(header.chain_id, precommit)
     let pubKey = Buffer.from(validator.pub_key.value, 'base64')
 
