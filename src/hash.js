@@ -31,7 +31,8 @@ const blockHashFields = [
   [ 'App', 'app_hash', VarHexBuffer ],
   [ 'Consensus', 'consensus_hash', VarHexBuffer ],
   [ 'Results', 'last_results_hash', VarHexBuffer ],
-  [ 'Evidence', 'evidence_hash', VarHexBuffer ]
+  [ 'Evidence', 'evidence_hash', VarHexBuffer ],
+  [ 'Proposer', 'proposer_address', VarHexBuffer ]
 ]
 
 // sort fields by hash of name
