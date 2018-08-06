@@ -50,10 +50,11 @@ const Time = {
 }
 
 const BlockID = {
+  empty: Buffer.from('1200', 'hex'),
   encode (value) {
     // empty block id
     if (!value.hash) {
-      return Buffer.from('1200', 'hex')
+      return BlockID.empty
     }
 
     let buffer = Buffer.alloc(48)

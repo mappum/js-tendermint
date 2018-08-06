@@ -63,6 +63,12 @@ function kvHash (type, value, key) {
   let encodedValue = ''
   if (value || typeof value === 'number') {
     encodedValue = type.encode(value)
+
+    // some types have an "empty" value,
+    // if we got that then use an empty buffer instead
+    if (type.empty != null && encodedValue === type.empty) {
+      encodedValue = Buffer.alloc(0)
+    }
   }
   let valueHash = tmhash(encodedValue)
   return tmhash(
