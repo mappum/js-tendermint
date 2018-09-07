@@ -1,3 +1,5 @@
 src
 test
 .nyc_output
+.travis.yml
+example
