@@ -1,4 +1,4 @@
-let test = require('ava')
+let test = require('tape')
 let {
   VarInt,
   VarHexBuffer,
@@ -18,15 +18,16 @@ validatorHashInputFixture.value.pub_key = pubkeyFixture.value
 function EncodeTest (t, type) {
   return (value, expected) => {
     let actual = type.encode(value).toString('hex')
-    t.is(actual, expected, `encode ${JSON.stringify(value, null, '  ')}`)
+    t.equals(actual, expected, `encode ${JSON.stringify(value, null, '  ')}`)
   }
 }
 
 test('VarInt', (t) => {
   for (let { value, encoding } of varintFixtures) {
     let actual = VarInt.encode(value).toString('hex')
-    t.is(actual, encoding, `encode ${value}`)
+    t.equals(actual, encoding, `encode ${value}`)
   }
+  t.end()
 })
 
 test('VarHexBuffer', (t) => {
@@ -34,33 +35,37 @@ test('VarHexBuffer', (t) => {
   let data = '0001020304050607'
   let output = Buffer.alloc(9)
   VarHexBuffer.encode(data, output, 0)
-  t.is(output.toString('hex'), '080001020304050607')
-  t.is(VarHexBuffer.encode.bytes, 9)
+  t.equals(output.toString('hex'), '080001020304050607')
+  t.equals(VarHexBuffer.encode.bytes, 9)
 
   // encodingLength
   let length = VarHexBuffer.encodingLength(data)
-  t.is(length, 9)
+  t.equals(length, 9)
+  t.end()
 })
 
 test('Time', (t) => {
   // TODO: failure case
   for (let { value, encoding } of timeFixtures) {
     let actual = Time.encode(value).toString('hex')
-    t.is(actual, encoding, `encode ${value}`)
+    t.equals(actual, encoding, `encode ${value}`)
   }
+  t.end()
 })
 
 test('BlockID', (t) => {
   for (let { value, encoding } of blockIDFixtures) {
     let actual = BlockID.encode(value).toString('hex')
-    t.is(actual, encoding, `encode ${value}`)
+    t.equals(actual, encoding, `encode ${value}`)
   }
+  t.end()
 })
 
 test('PubKey', (t) => {
   let encodeTest = EncodeTest(t, PubKey)
   encodeTest(null, '00')
   encodeTest(pubkeyFixture.value, pubkeyFixture.encoding)
+  t.end()
 })
 
 test('ValidatorHashInput', (t) => {
@@ -69,4 +74,5 @@ test('ValidatorHashInput', (t) => {
     validatorHashInputFixture.value,
     validatorHashInputFixture.encoding
   )
+  t.end()
 })

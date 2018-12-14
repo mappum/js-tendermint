@@ -1,10 +1,26 @@
-language: node_js
 sudo: false
-node_js:
-  - "8"
-  - "9"
-  - "10"
-install:
-  - npm install
-script:
-  - npm test
+language: node_js
+install: true
+script: "./test/travis.sh"
+env:
+  matrix:
+  - NODE=11
+  - NODE=10
+  - NODE=9
+  - NODE=8
+  - BROWSER=chrome
+  - BROWSER=firefox
+  - BROWSER=safari
+  - BROWSER=iphone
+  - BROWSER=android
+  global:
+  - secure: KTNbnHgpdJODNAI08ilDdOlStbIEnEOG+YtWMrP7/cyy7KB3X26vtLiihE0TBPaN+1nlhxvGb51Edx4rJqp42DI3Wy4pJ8A6U7zTaudUFbW+gDKLsDla+A3QjO4U5ZQsZpY1v78b3lQAka0cwXQWe4KrLN4bqDJ6UvOdPw/jGg8aSnK0P32IYo2mostr3o2g3AtTCuh2tGGtpFuQI2AQGuiokY+zNs/oL31h7AxZ0Xp0TXp4sEennU9ZOv3Tu7iFWuMaysRSCKCEgxRRp9wkPiN78BDO8/avfACkI3spPRsAU7/xOBjY+88M2ximUH4taxy02B3C33q/RpAkDP51kw6m0qv4ikN+o1znS0Q+9WoaYfiTGmxzxXNHlSBNly67bH4PjCkCR3hVRqwgzV36jhuxWtI7QKhIDRT2y3Rfzaam9yb+SmqK50IuKwP6E17JUi0jpPcW9gWTCG++/xsogYjGbo4CABmPv6/CWF6M/ZTAnqk9UTBn9nCz2hSos62ykkapJo/DAk+7vgOFMRium5x1RnOGmOSmUKbnxY0AS7Wd4c809z7Uo1M7akIYQRxOtq+M6iQ7qBPaVFesudvgq0Nollw1hhmgC/GuC0WwPpDfmnziM0DZQjMvC81yX6gvEg9TsA8JF6421xBu1aZEuhyH0eaoNag7aWFvH94463g=
+  - secure: AbVZwOHaq0eYDwdbLUpNxEECycRgWkGYo5iCwQyt95YStBA6GhNj+tYAcjkJ17BhrMArMsmGFRzRJyVh2tg1QAqegABW2lWjwEI+YD/Ap2/uo9Zo7YygpcvMq3IwrfLngjcVmND8QZpuRDj+lBGSN0n+98YJDw4B4BhO1efiyj6rnnV1KBbWt2SKEttEZWnowpd3CT3PssTF4JVv0KYn9hUhqaZzsW/hG51VQ5YzB014AGTr6a481faZ0mQtA8QoD//runRYwLsL5PL8LwR/QnUqMcVeer5zgpDStV7o03baZKG1YmP7vXk/tE2o8Jxf+4PQG/s7d+ixPMmRgDgEUzZ9G6Vot0NKNQjnQkAAVGCMYQ+TTbtpOWqboXzx/vpM4LqalTO3XvMF85ImS5+wVCPMkZN/pN64n+SMMnh5jnh04QjvMcbZ/m8L7qrUsN863QgNGP7G53HzNk64f4DeHrRqnz0OBtEjxO4z/AIcdhBZwDSNyX8IEXONhI3PjhpxvAZxuLoLl07H8At1zzPXyvzRSfuvf378oX7P2mq3lwkyRStyQ0ExjjCjNOQzTX4mbtP+DFWjehwDkT6l4yPGHPjioHbqJrlJ5y+sMroC4vqO4CcPjNM4YHkEm6k2U0xfohxzJzJM0EExkgE3DV910X37hDA+SLDfs9RSP9fpms0=
+notifications:
+  email: false
+addons:
+  sauce_connect: true
+  hosts:
+  - airtap.local
+before_install: if [ -z "$BROWSER" ]; then unset SAUCE_USERNAME && unset SAUCE_ACCESS_KEY;
+  fi

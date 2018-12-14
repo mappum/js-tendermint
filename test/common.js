@@ -1,11 +1,11 @@
-let test = require('ava')
+let test = require('tape')
 let { safeParseInt } = require('../lib/common.js')
 
 test('safeParseInt', (t) => {
-  t.is(safeParseInt('123'), 123)
-  t.is(safeParseInt('-123'), -123)
-  t.is(safeParseInt(123), 123)
-  t.is(safeParseInt(-123), -123)
+  t.equals(safeParseInt('123'), 123)
+  t.equals(safeParseInt('-123'), -123)
+  t.equals(safeParseInt(123), 123)
+  t.equals(safeParseInt(-123), -123)
   t.throws(() => safeParseInt(),
     'Value undefined is not an integer')
   t.throws(() => safeParseInt(''),
@@ -26,4 +26,5 @@ test('safeParseInt', (t) => {
     'Value "123.5" is not a canonical integer string representation')
   t.throws(() => safeParseInt(123.5),
     'Value 123.5 is not a canonical integer string representation')
+  t.end()
 })

@@ -1,5 +1,5 @@
 let randomBytes = require('crypto').pseudoRandomBytes
-let test = require('ava')
+let test = require('tape')
 let ed25519 = require('supercop.js')
 let {
   verifyCommit,
@@ -19,6 +19,7 @@ test('verifyCommit with mismatched header and commit', (t) => {
     () => verifyCommit(header, commit, validators),
     'Commit does not match block hash'
   )
+  t.end()
 })
 
 test('verifyCommit with mismatched header and precommit', (t) => {
@@ -32,6 +33,7 @@ test('verifyCommit with mismatched header and precommit', (t) => {
     () => verifyCommit(header, commit, validators),
     'Precommit block hash does not match commit'
   )
+  t.end()
 })
 
 function genGenesisHeader (validators) {
