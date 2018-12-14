@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "pretest": "depcheck --ignores=airtap && standard src test example index.js",
-    "test": "npm run pretest && nyc ava test/lightNodeIntegration.js test/rpc.js && npm run test-light",
+    "test": "npm run pretest && nyc ava test/lightNodeIntegration.js test/rpc.js test/attacks.js && npm run test-light",
     "test-light": "nyc tape test/common.js test/types.js test/verify.js",
     "test-browser": "npm run pretest && ./test/browser.sh",
     "build": "rm -rf lib && babel src -d lib",

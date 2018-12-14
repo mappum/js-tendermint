@@ -2,8 +2,8 @@ let { createServer } = require('http')
 let parseUrl = require('url').parse
 let test = require('ava')
 let getPort = require('get-port')
-let WebSocketServer = require('ws').Server
 let { RpcClient } = require('..')
+let { createWsServer } = require('./utils.js')
 
 function createHttpServer (port = 26657, onRequest) {
   let server = createServer((req, res) => {
@@ -12,23 +12,6 @@ function createHttpServer (port = 26657, onRequest) {
     res.end(JSON.stringify(resValue))
   })
   server.listen(port)
-  return server
-}
-
-function createWsServer (port = 26657, onRequest) {
-  let server = new WebSocketServer({ port })
-  server.on('connection', (ws) => {
-    ws.on('message', (data) => {
-      let req = JSON.parse(data.toString())
-      let send = (error, result, id = req.id) => {
-        let res = { id, error, result }
-        ws.send(JSON.stringify(res) + '\n')
-      }
-      onRequest(req, send)
-    })
-  })
-  let close = server.close.bind(server)
-  server.close = () => new Promise(close)
   return server
 }
 
