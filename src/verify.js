@@ -137,7 +137,7 @@ function verifyCommitSigs (header, commit, validators) {
     }
 
     // count this validator's voting power
-    committedVotingPower += validator.voting_power
+    committedVotingPower += safeParseInt(validator.voting_power)
   }
 
   // sum all validators' voting power
@@ -175,7 +175,7 @@ function verifyValidatorSet (validators, expectedHash) {
   }
 
   let validatorSetHash = getValidatorSetHash(validators)
-  if (validatorSetHash !== expectedHash) {
+  if (expectedHash != null && validatorSetHash !== expectedHash) {
     throw Error('Validator set does not match what we expected')
   }
 }

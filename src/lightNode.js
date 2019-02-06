@@ -43,10 +43,11 @@ class LightNode extends EventEmitter {
 
     // we should be able to trust this state since it was either
     // hardcoded into the client, or previously verified/stored,
-    // but it doesn't hurt to do a sanity check. not required
-    // for first block, since we might be deriving it from genesis
+    // but it doesn't hurt to do a sanity check. commit verifification
+    // not required for first block, since we might be deriving it from
+    // genesis
+    verifyValidatorSet(state.validators, state.header.validators_hash)
     if (state.header.height > 1 || state.commit != null) {
-      verifyValidatorSet(state.validators, state.header.validators_hash)
       verifyCommit(state.header, state.commit, state.validators)
     }
 
