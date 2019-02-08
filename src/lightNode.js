@@ -9,6 +9,7 @@ const {
   verifyValidatorSet,
   verify
 } = require('./verify.js')
+const { getValidatorSetHash } = require('./hash.js')
 const { safeParseInt } = require('./common.js')
 
 const HOUR = 60 * 60 * 1000
@@ -49,6 +50,10 @@ class LightNode extends EventEmitter {
     verifyValidatorSet(state.validators, state.header.validators_hash)
     if (state.header.height > 1 || state.commit != null) {
       verifyCommit(state.header, state.commit, state.validators)
+    } else {
+      // add genesis validator hash to state
+      let validatorHash = getValidatorSetHash(state.validators)
+      state.header.validators_hash = validatorHash.toString('hex').toUpperCase()
     }
 
     this._state = state
