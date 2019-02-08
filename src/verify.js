@@ -142,7 +142,7 @@ function verifyCommitSigs (header, commit, validators) {
 
   // sum all validators' voting power
   let totalVotingPower = validators.reduce(
-    (sum, v) => sum + v.voting_power, 0)
+    (sum, v) => sum + safeParseInt(v.voting_power), 0)
   // JS numbers have no loss of precision up to 2^53, but we
   // error at over 2^52 since we have to do arithmetic. apps
   // should be able to keep voting power lower than this anyway
