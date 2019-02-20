@@ -36,16 +36,10 @@ var versionValues = []version.Consensus{
 
 var voteValues = []types.Vote{
 	types.Vote{
-		Type:   1,
-		Height: 1234567890,
-		Round:  2,
-		BlockID: types.BlockID{
-			Hash: []byte("01234567890123456789"),
-			PartsHeader: types.PartSetHeader{
-				Hash:  []byte("01234567890123456789"),
-				Total: 1,
-			},
-		},
+		Type:      0,
+		Height:    1,
+		Round:     2,
+		BlockID:   types.BlockID{},
 		Timestamp: time.Unix(123456789, 123456789).UTC(),
 	},
 	types.Vote{
