@@ -44,6 +44,10 @@ test('simple light node sync', async (t) => {
   rpc.close()
 
   let lightNode = LightNode(rpcHost, state)
+  lightNode.once('error', (err) => {
+    console.error(err.stack)
+    t.fail()
+  })
 
   await new Promise((resolve) => {
     lightNode.once('synced', resolve)
