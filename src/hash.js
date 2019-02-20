@@ -13,9 +13,7 @@ const {
 } = require('./types.js')
 
 const sha256 = hashFunc('sha256')
-const tmhash = function (...data) {
-  return sha256(...data).slice(0, 20)
-}
+const tmhash = sha256
 
 const blockHashFields = [
   [ 'ChainID', 'chain_id', VarString ],
