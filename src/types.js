@@ -24,7 +24,7 @@ const VarHexBuffer = {
 }
 
 const Time = {
-  encode (value) {
+  encode (value, buffer = Buffer.alloc(14), offset = 0) {
     if (value[value.length - 1] !== 'Z') {
       throw Error('Timestamp must be UTC timezone')
     }
@@ -37,13 +37,11 @@ const Time = {
     let nanosStr = withoutZone.split('.')[1] || ''
     let nanos = Number(nanosStr.padEnd(9, '0'))
 
-    let buffer = Buffer.alloc(14)
+    buffer[offset] = (1 << 3) | 1 // field 1, typ3 1
+    buffer.writeUInt32LE(seconds, offset + 1)
 
-    buffer[0] = (1 << 3) | 1 // field 1, typ3 1
-    buffer.writeUInt32LE(seconds, 1)
-
-    buffer[9] = (2 << 3) | 5 // field 2, typ3 5
-    buffer.writeUInt32LE(nanos, 10)
+    buffer[offset + 9] = (2 << 3) | 5 // field 2, typ3 5
+    buffer.writeUInt32LE(nanos, offset + 10)
 
     return buffer
   }
@@ -51,29 +49,49 @@ const Time = {
 
 const BlockID = {
   empty: Buffer.from('1200', 'hex'),
-  encode (value) {
+  encode (value, buffer = Buffer.alloc(48), offset = 0) {
     // empty block id
     if (!value.hash) {
       return BlockID.empty
     }
 
-    let buffer = Buffer.alloc(48)
-
     // TODO: actually do amino encoding stuff
 
     // hash field
-    buffer[0] = 0x0a
-    buffer[1] = 0x14 // length of hash (20)
-    Buffer.from(value.hash, 'hex').copy(buffer, 2)
+    buffer[offset + 0] = 0x0a
+    buffer[offset + 1] = 0x14 // length of hash (20)
+    Buffer.from(value.hash, 'hex').copy(buffer, offset + 2)
 
     // block parts
-    buffer[22] = 0x12
-    buffer[23] = 0x18
-    buffer[24] = 0x08
-    buffer[25] = 0x02
-    buffer[26] = 0x12
-    buffer[27] = 0x14
-    Buffer.from(value.parts.hash, 'hex').copy(buffer, 28)
+    buffer[offset + 22] = 0x12
+    buffer[offset + 23] = 0x18
+    buffer[offset + 24] = 0x08
+    buffer[offset + 25] = 0x02
+    buffer[offset + 26] = 0x12
+    buffer[offset + 27] = 0x14
+    Buffer.from(value.parts.hash, 'hex').copy(buffer, offset + 28)
+
+    return buffer
+  }
+}
+
+const CanonicalBlockID = {
+  encode (value, buffer = Buffer.alloc(48), offset = 0) {
+    // TODO: actually do amino encoding stuff
+
+    // hash field
+    buffer[offset + 0] = 0x0a
+    buffer[offset + 1] = 0x14 // length of hash (20)
+    Buffer.from(value.hash, 'hex').copy(buffer, offset + 2)
+
+    // block parts
+    buffer[offset + 22] = 0x12
+    buffer[offset + 23] = 0x18
+    buffer[offset + 24] = 0x0a
+    buffer[offset + 25] = 0x14
+    Buffer.from(value.parts.hash, 'hex').copy(buffer, offset + 26)
+    buffer[offset + 46] = 0x10
+    buffer[offset + 47] = 0x02
 
     return buffer
   }
@@ -139,6 +157,49 @@ const ValidatorHashInput = {
   }
 }
 
+const CanonicalVote = {
+  decode (buffer, start = 0, end = buffer.length) {
+    throw Error('Decode not implemented')
+  },
+  encode (vote) {
+    let length = CanonicalVote.encodingLength(vote)
+    let buffer = Buffer.alloc(length)
+
+    // type field
+    buffer[0] = 0x08
+    buffer.writeUInt8(vote.type, 1)
+
+    // height field
+    buffer[2] = 0x11
+    Int64LE.encode(vote.height, buffer, 3)
+
+    // round field
+    buffer[11] = 0x19
+    Int64LE.encode(vote.round, buffer, 12)
+
+    // block_id field
+    buffer[20] = 0x22
+    buffer[21] = 0x30
+    CanonicalBlockID.encode(vote.block_id, buffer, 22)
+
+    // time field
+    buffer[70] = 0x2a
+    buffer[71] = 0x0e
+    Time.encode(vote.timestamp, buffer, 72)
+
+    // chain_id field
+    buffer[86] = 0x32
+    buffer.writeUInt8(vote.chain_id.length, 87)
+    Buffer.from(vote.chain_id).copy(buffer, 88)
+
+    CanonicalVote.encode.bytes = length
+    return buffer
+  },
+  encodingLength (vote) {
+    return 96
+  }
+}
+
 module.exports = {
   VarInt,
   UVarInt,
@@ -147,8 +208,10 @@ module.exports = {
   VarHexBuffer,
   Time,
   BlockID,
+  CanonicalBlockID,
   TreeHashInput,
   ValidatorHashInput,
   PubKey,
-  Int64LE
+  Int64LE,
+  CanonicalVote
 }
