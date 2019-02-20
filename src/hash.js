@@ -2,48 +2,40 @@
 
 const createHash = require('create-hash')
 const {
+  UVarInt,
   VarInt,
   VarString,
   VarBuffer,
   VarHexBuffer,
   Time,
   BlockID,
-  ValidatorHashInput
+  ValidatorHashInput,
+  Version
 } = require('./types.js')
 
 const sha256 = hashFunc('sha256')
 const tmhash = sha256
 
-const blockHashFields = [
-  [ 'ChainID', 'chain_id', VarString ],
-  [ 'Height', 'height', VarInt ],
-  [ 'Time', 'time', Time ],
-  [ 'NumTxs', 'num_txs', VarInt ],
-  [ 'TotalTxs', 'total_txs', VarInt ],
-  [ 'LastBlockID', 'last_block_id', BlockID ],
-  [ 'LastCommit', 'last_commit_hash', VarHexBuffer ],
-  [ 'Data', 'data_hash', VarHexBuffer ],
-  [ 'Validators', 'validators_hash', VarHexBuffer ],
-  [ 'NextValidators', 'next_validators_hash', VarHexBuffer ],
-  [ 'App', 'app_hash', VarHexBuffer ],
-  [ 'Consensus', 'consensus_hash', VarHexBuffer ],
-  [ 'Results', 'last_results_hash', VarHexBuffer ],
-  [ 'Evidence', 'evidence_hash', VarHexBuffer ],
-  [ 'Proposer', 'proposer_address', VarHexBuffer ]
-]
-
-// sort fields by hash of name
-blockHashFields.sort(([ keyA ], [ keyB ]) => {
-  let bufA = Buffer.from(keyA)
-  let bufB = Buffer.from(keyB)
-  return bufA.compare(bufB)
-})
-
 function getBlockHash (header) {
-  let hashes = blockHashFields.map(([ key, jsonKey, type ]) => {
-    return kvHash(type, header[jsonKey], key)
-  })
-  return treeHash(hashes).toString('hex').toUpperCase()
+  let encodedFields = [
+    Version.encode(header.version),
+    VarString.encode(header.chain_id),
+    UVarInt.encode(header.height),
+    Time.encode(header.time),
+    UVarInt.encode(header.num_txs),
+    UVarInt.encode(header.total_txs),
+    BlockID.encode(header.last_block_id),
+    omitEmpty(VarHexBuffer.encode(header.last_commit_hash)),
+    omitEmpty(VarHexBuffer.encode(header.data_hash)),
+    VarHexBuffer.encode(header.validators_hash),
+    VarHexBuffer.encode(header.next_validators_hash),
+    VarHexBuffer.encode(header.consensus_hash),
+    omitEmpty(VarHexBuffer.encode(header.app_hash)),
+    omitEmpty(VarHexBuffer.encode(header.last_results_hash)),
+    omitEmpty(VarHexBuffer.encode(header.evidence_hash)),
+    VarHexBuffer.encode(header.proposer_address)
+  ]
+  return treeHash(encodedFields).toString('hex').toUpperCase()
 }
 
 function getValidatorSetHash (validators) {
@@ -51,22 +43,11 @@ function getValidatorSetHash (validators) {
   return treeHash(bytes).toString('hex').toUpperCase()
 }
 
-function kvHash (type, value, key) {
-  let encodedValue = ''
-  if (value || typeof value === 'number') {
-    encodedValue = type.encode(value)
-
-    // some types have an "empty" value,
-    // if we got that then use an empty buffer instead
-    if (type.empty != null && encodedValue === type.empty) {
-      encodedValue = Buffer.alloc(0)
-    }
+function omitEmpty (bytes) {
+  if (bytes.length === 1 && bytes[0] === 0) {
+    return Buffer.alloc(0)
   }
-  let valueHash = tmhash(encodedValue)
-  return tmhash(
-    VarString.encode(key),
-    VarBuffer.encode(valueHash)
-  )
+  return bytes
 }
 
 function treeHash (hashes) {
