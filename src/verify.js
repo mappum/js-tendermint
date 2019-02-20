@@ -7,23 +7,16 @@ const {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
+const { CanonicalVote } = require('./types.js')
 const { getAddress } = require('./pubkey.js')
 const { safeParseInt } = require('./common.js')
 
 // gets the serialized representation of a vote, which is used
 // in the commit signatures
 function getVoteSignBytes (chainId, vote) {
-  let { height, round, timestamp, type, block_id: blockId } = vote
-
-  return Buffer.from(stringify({
-    '@chain_id': chainId,
-    '@type': 'vote',
-    block_id: blockId,
-    height: String(height),
-    round: String(round),
-    timestamp,
-    type: safeParseInt(type)
-  }))
+  let canonicalVote = Object.assign({}, vote)
+  canonicalVote.chain_id = chainId
+  return CanonicalVote.encode(canonicalVote)
 }
 
 // verifies that a number is a positive integer, less than the
