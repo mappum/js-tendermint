@@ -35,13 +35,17 @@ const Time = {
     let { seconds, nanoseconds } = Time.getComponents(value)
 
     // seconds field
-    buffer[offset] = 0x08
-    UVarInt.encode(seconds, buffer, offset + 1)
-    offset += UVarInt.encode.bytes + 1
+    if (seconds) {
+      buffer[offset] = 0x08
+      UVarInt.encode(seconds, buffer, offset + 1)
+      offset += UVarInt.encode.bytes + 1
+    }
 
     // nanoseconds field
-    buffer[offset] = 0x10
-    UVarInt.encode(nanoseconds, buffer, offset + 1)
+    if (nanoseconds) {
+      buffer[offset] = 0x10
+      UVarInt.encode(nanoseconds, buffer, offset + 1)
+    }
 
     Time.encode.bytes = length
     return buffer
@@ -74,51 +78,84 @@ const Time = {
 }
 
 const BlockID = {
-  encode (value, buffer = Buffer.alloc(48), offset = 0) {
-    // empty block id
-    if (!value.hash) {
-      return Buffer.alloc(0)
-    }
+  encode (value, buffer, offset = 0) {
+    let length = BlockID.encodingLength(value)
+    buffer = buffer || Buffer.alloc(length)
 
     // TODO: actually do amino encoding stuff
 
     // hash field
-    buffer[offset + 0] = 0x0a
-    buffer[offset + 1] = 0x14 // length of hash (20)
-    Buffer.from(value.hash, 'hex').copy(buffer, offset + 2)
+    if (value.hash) {
+      let hash = Buffer.from(value.hash, 'hex')
+      buffer[offset + 0] = 0x0a
+      buffer[offset + 1] = hash.length
+      hash.copy(buffer, offset + 2)
+      offset += hash.length + 2
+    }
 
     // block parts
-    buffer[offset + 22] = 0x12
-    buffer[offset + 23] = 0x18
-    buffer[offset + 24] = 0x08
-    buffer[offset + 25] = 0x01
-    buffer[offset + 26] = 0x12
-    buffer[offset + 27] = 0x14
-    Buffer.from(value.parts.hash, 'hex').copy(buffer, offset + 28)
+    if (value.parts && value.parts.hash) {
+      let partsHash = Buffer.from(value.parts.hash, 'hex')
+      buffer[offset] = 0x12
+      buffer[offset + 1] = partsHash.length + 4
 
+      buffer[offset + 2] = 0x08
+      buffer[offset + 3] = value.parts.total
+
+      buffer[offset + 4] = 0x12
+      buffer[offset + 5] = partsHash.length
+      partsHash.copy(buffer, offset + 6)
+      offset += partsHash.length + 4
+    }
+
+    CanonicalBlockID.encode.bytes = length
     return buffer
+  },
+
+  encodingLength (value) {
+    let length = 0
+    if (value.hash) length += value.hash.length / 2 + 2
+    if (value.parts && value.parts.hash) {
+      length += value.parts.hash.length / 2 + 6
+    }
+    return length
   }
 }
 
 const CanonicalBlockID = {
-  encode (value, buffer = Buffer.alloc(48), offset = 0) {
+  encode (value, buffer, offset = 0) {
+    let length = CanonicalBlockID.encodingLength(value)
+    buffer = buffer || Buffer.alloc(length)
+
     // TODO: actually do amino encoding stuff
 
     // hash field
+    let hash = Buffer.from(value.hash, 'hex')
     buffer[offset + 0] = 0x0a
-    buffer[offset + 1] = 0x14 // length of hash (20)
-    Buffer.from(value.hash, 'hex').copy(buffer, offset + 2)
+    buffer[offset + 1] = hash.length
+    hash.copy(buffer, offset + 2)
+    offset += hash.length + 2
 
     // block parts
-    buffer[offset + 22] = 0x12
-    buffer[offset + 23] = 0x18
-    buffer[offset + 24] = 0x0a
-    buffer[offset + 25] = 0x14
-    Buffer.from(value.parts.hash, 'hex').copy(buffer, offset + 26)
-    buffer[offset + 46] = 0x10
-    buffer[offset + 47] = 0x01
+    let partsHash = Buffer.from(value.parts.hash, 'hex')
+    buffer[offset] = 0x12
+    buffer[offset + 1] = partsHash.length + 4
+    buffer[offset + 2] = 0x0a
+    buffer[offset + 3] = partsHash.length
+    partsHash.copy(buffer, offset + 4)
+    offset += partsHash.length + 4
 
+    buffer[offset] = 0x10
+    buffer[offset + 1] = value.parts.total
+
+    CanonicalBlockID.encode.bytes = length
     return buffer
+  },
+
+  encodingLength (value) {
+    return (value.hash.length / 2) +
+      (value.parts.hash.length / 2) +
+      8
   }
 }
 
@@ -183,29 +220,36 @@ const CanonicalVote = {
   encode (vote) {
     let length = CanonicalVote.encodingLength(vote)
     let buffer = Buffer.alloc(length)
+    let offset = 0
 
     // type field
-    buffer[0] = 0x08
-    buffer.writeUInt8(vote.type, 1)
+    buffer[offset] = 0x08
+    buffer.writeUInt8(vote.type, offset + 1)
+    offset += 2
 
     // height field
-    buffer[2] = 0x11
-    Int64LE.encode(vote.height, buffer, 3)
+    buffer[offset] = 0x11
+    Int64LE.encode(vote.height, buffer, offset + 1)
+    offset += 9
 
     // round field
-    buffer[11] = 0x19
-    Int64LE.encode(vote.round, buffer, 12)
+    if (Number(vote.round)) {
+      buffer[offset] = 0x19
+      Int64LE.encode(vote.round, buffer, offset + 1)
+      offset += 9
+    }
 
     // block_id field
-    buffer[20] = 0x22
-    buffer[21] = 0x30
-    CanonicalBlockID.encode(vote.block_id, buffer, 22)
+    buffer[offset] = 0x22
+    CanonicalBlockID.encode(vote.block_id, buffer, offset + 2)
+    buffer[offset + 1] = CanonicalBlockID.encode.bytes
+    offset += CanonicalBlockID.encode.bytes + 2
 
     // time field
-    buffer[70] = 0x2a
-    buffer[71] = 0x0a
-    Time.encode(vote.timestamp, buffer, 72)
-    let offset = 72 + Time.encode.bytes
+    buffer[offset] = 0x2a
+    Time.encode(vote.timestamp, buffer, offset + 2)
+    buffer[offset + 1] = Time.encode.bytes
+    offset += Time.encode.bytes + 2
 
     // chain_id field
     buffer[offset] = 0x32
@@ -216,7 +260,29 @@ const CanonicalVote = {
     return buffer
   },
   encodingLength (vote) {
-    return 92
+    let length = 0
+
+    // type field
+    length += 2
+
+    // height field
+    length += 9
+
+    // round field
+    if (Number(vote.round)) {
+      length += 9
+    }
+
+    // block_id field
+    length += CanonicalBlockID.encodingLength(vote.block_id) + 2
+
+    // time field
+    length += Time.encodingLength(vote.timestamp) + 2
+
+    // chain_id field
+    length += vote.chain_id.length + 2
+
+    return length
   }
 }
 
