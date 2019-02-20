@@ -28,7 +28,7 @@ test('Vote', (t) => {
   for (let { value, encoding } of voteFixtures) {
     value.chain_id = 'chain-id'
     let actual = CanonicalVote.encode(value).toString('hex')
-    t.equals(actual, encoding, `encode ${value}`)
+    t.equals(actual, encoding, `encode ${JSON.stringify(value)}`)
   }
   t.end()
 })
