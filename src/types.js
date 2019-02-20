@@ -24,35 +24,60 @@ const VarHexBuffer = {
 }
 
 const Time = {
-  encode (value, buffer = Buffer.alloc(14), offset = 0) {
+  encode (value, buffer, offset = 0) {
     if (value[value.length - 1] !== 'Z') {
       throw Error('Timestamp must be UTC timezone')
     }
 
+    let length = Time.encodingLength(value)
+    buffer = buffer || Buffer.alloc(length)
+
+    let { seconds, nanoseconds } = Time.getComponents(value)
+
+    // seconds field
+    buffer[offset] = 0x08
+    UVarInt.encode(seconds, buffer, offset + 1)
+    offset += UVarInt.encode.bytes + 1
+
+    // nanoseconds field
+    buffer[offset] = 0x10
+    UVarInt.encode(nanoseconds, buffer, offset + 1)
+
+    Time.encode.bytes = length
+    return buffer
+  },
+
+  encodingLength (value) {
+    let { seconds, nanoseconds } = Time.getComponents(value)
+
+    let length = 0
+    if (seconds) {
+      length += 1 + UVarInt.encodingLength(seconds)
+    }
+    if (nanoseconds) {
+      length += 1 + UVarInt.encodingLength(nanoseconds)
+    }
+    return length
+  },
+
+  getComponents (value) {
     let millis = new Date(value).getTime()
     let seconds = Math.floor(millis / 1000)
 
     // ghetto, we're pulling the nanoseconds from the string
     let withoutZone = value.slice(0, -1)
     let nanosStr = withoutZone.split('.')[1] || ''
-    let nanos = Number(nanosStr.padEnd(9, '0'))
+    let nanoseconds = Number(nanosStr.padEnd(9, '0'))
 
-    buffer[offset] = (1 << 3) | 1 // field 1, typ3 1
-    buffer.writeUInt32LE(seconds, offset + 1)
-
-    buffer[offset + 9] = (2 << 3) | 5 // field 2, typ3 5
-    buffer.writeUInt32LE(nanos, offset + 10)
-
-    return buffer
+    return { seconds, nanoseconds }
   }
 }
 
 const BlockID = {
-  empty: Buffer.from('1200', 'hex'),
   encode (value, buffer = Buffer.alloc(48), offset = 0) {
     // empty block id
     if (!value.hash) {
-      return BlockID.empty
+      return Buffer.alloc(0)
     }
 
     // TODO: actually do amino encoding stuff
@@ -66,7 +91,7 @@ const BlockID = {
     buffer[offset + 22] = 0x12
     buffer[offset + 23] = 0x18
     buffer[offset + 24] = 0x08
-    buffer[offset + 25] = 0x02
+    buffer[offset + 25] = 0x01
     buffer[offset + 26] = 0x12
     buffer[offset + 27] = 0x14
     Buffer.from(value.parts.hash, 'hex').copy(buffer, offset + 28)
@@ -91,7 +116,7 @@ const CanonicalBlockID = {
     buffer[offset + 25] = 0x14
     Buffer.from(value.parts.hash, 'hex').copy(buffer, offset + 26)
     buffer[offset + 46] = 0x10
-    buffer[offset + 47] = 0x02
+    buffer[offset + 47] = 0x01
 
     return buffer
   }
@@ -141,7 +166,7 @@ const ValidatorHashInput = {
 
     // voting power field
     buffer[39] = 0x10
-    VarInt.encode(validator.voting_power, buffer, 40)
+    UVarInt.encode(validator.voting_power, buffer, 40)
 
     ValidatorHashInput.encode.bytes = length
     return buffer
@@ -178,19 +203,20 @@ const CanonicalVote = {
 
     // time field
     buffer[70] = 0x2a
-    buffer[71] = 0x0e
+    buffer[71] = 0x0a
     Time.encode(vote.timestamp, buffer, 72)
+    let offset = 72 + Time.encode.bytes
 
     // chain_id field
-    buffer[86] = 0x32
-    buffer.writeUInt8(vote.chain_id.length, 87)
-    Buffer.from(vote.chain_id).copy(buffer, 88)
+    buffer[offset] = 0x32
+    buffer.writeUInt8(vote.chain_id.length, offset + 1)
+    Buffer.from(vote.chain_id).copy(buffer, offset + 2)
 
     CanonicalVote.encode.bytes = length
     return buffer
   },
   encodingLength (vote) {
-    return 96
+    return 92
   }
 }
 

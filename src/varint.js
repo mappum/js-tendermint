@@ -26,7 +26,7 @@ function VarInt (signed) {
 
   function encodingLength (n) {
     if (signed) n *= 2
-    if (n < 0 || n > Number.MAX_SAFE_INTEGER) {
+    if ((!signed && n < 0) || Math.abs(n) > Number.MAX_SAFE_INTEGER) {
       throw Error('varint value is out of bounds')
     }
     let bits = Math.log2(n + 1)
