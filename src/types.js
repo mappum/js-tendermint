@@ -223,14 +223,18 @@ const CanonicalVote = {
     let offset = 0
 
     // type field
-    buffer[offset] = 0x08
-    buffer.writeUInt8(vote.type, offset + 1)
-    offset += 2
+    if (Number(vote.type)) {
+      buffer[offset] = 0x08
+      buffer.writeUInt8(vote.type, offset + 1)
+      offset += 2
+    }
 
     // height field
-    buffer[offset] = 0x11
-    Int64LE.encode(vote.height, buffer, offset + 1)
-    offset += 9
+    if (Number(vote.height)) {
+      buffer[offset] = 0x11
+      Int64LE.encode(vote.height, buffer, offset + 1)
+      offset += 9
+    }
 
     // round field
     if (Number(vote.round)) {
@@ -240,10 +244,12 @@ const CanonicalVote = {
     }
 
     // block_id field
-    buffer[offset] = 0x22
-    CanonicalBlockID.encode(vote.block_id, buffer, offset + 2)
-    buffer[offset + 1] = CanonicalBlockID.encode.bytes
-    offset += CanonicalBlockID.encode.bytes + 2
+    if (vote.block_id && vote.block_id.hash) {
+      buffer[offset] = 0x22
+      CanonicalBlockID.encode(vote.block_id, buffer, offset + 2)
+      buffer[offset + 1] = CanonicalBlockID.encode.bytes
+      offset += CanonicalBlockID.encode.bytes + 2
+    }
 
     // time field
     buffer[offset] = 0x2a
@@ -263,10 +269,14 @@ const CanonicalVote = {
     let length = 0
 
     // type field
-    length += 2
+    if (Number(vote.type)) {
+      length += 2
+    }
 
     // height field
-    length += 9
+    if (Number(vote.height)) {
+      length += 9
+    }
 
     // round field
     if (Number(vote.round)) {
@@ -274,7 +284,9 @@ const CanonicalVote = {
     }
 
     // block_id field
-    length += CanonicalBlockID.encodingLength(vote.block_id) + 2
+    if (vote.block_id && vote.block_id.hash) {
+      length += CanonicalBlockID.encodingLength(vote.block_id) + 2
+    }
 
     // time field
     length += Time.encodingLength(vote.timestamp) + 2
