@@ -16,7 +16,7 @@ test.beforeEach(async (t) => {
   let node = tm.node(home, {
     p2p: { laddr: `tcp://127.0.0.1:${ports.p2p}` },
     rpc: { laddr: `tcp://127.0.0.1:${ports.rpc}` },
-    proxy_app: 'dummy'
+    proxy_app: 'noop'
   })
 
   t.context.ports = ports
