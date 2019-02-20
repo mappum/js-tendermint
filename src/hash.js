@@ -76,6 +76,9 @@ function kvHash (type, value, key) {
 }
 
 function treeHash (hashes) {
+  if (hashes.length === 0) {
+    throw Error('Empty hash list')
+  }
   if (hashes.length === 1) {
     return hashes[0]
   }
