@@ -2,7 +2,9 @@ let WebSocketServer = require('ws').Server
 
 function createWsServer (port = 26657, onRequest) {
   let server = new WebSocketServer({ port })
+  let connections = []
   server.on('connection', (ws) => {
+    connections.push(ws)
     ws.on('message', (data) => {
       let req = JSON.parse(data.toString())
       let send = (error, result, id = req.id) => {
@@ -12,8 +14,12 @@ function createWsServer (port = 26657, onRequest) {
       onRequest(req, send)
     })
   })
-  let close = server.close.bind(server)
-  server.close = () => new Promise(close)
+  let _close = server.close.bind(server)
+  let close = () => {
+    connections.forEach((ws) => ws.close())
+    _close()
+  }
+  server.close = close
   return server
 }
 

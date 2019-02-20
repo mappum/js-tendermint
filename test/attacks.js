@@ -41,24 +41,33 @@ test.cb.skip('fake sync height', (t) => {
   })
 })
 
-test.cb('fake header timestamp', (t) => {
-  getPort().then((rpcPort) => {
-    let server = createWsServer(rpcPort, () => {})
-    let peer = `ws://localhost:${rpcPort}`
+test('fake header timestamp', async (t) => {
+  let rpcPort = await getPort()
+  let server = createWsServer(rpcPort, () => {})
+  let peer = `ws://localhost:${rpcPort}`
 
-    let node = LightNode(peer, {
-      validators: [],
-      header: { height: 1 }
-    })
+  let node = LightNode(peer, {
+    validators: [
+      {
+        "address": "96E2BEAF73D1694F1FE2747AF128C42E0CF1CBB8",
+        "pub_key": {
+          "type": "tendermint/PubKeyEd25519",
+          "value": "mME8SWTtXhXX/H242IDYLPQsSl8I6ybZjDUcHjyXeE4="
+        },
+        "voting_power": "10",
+        "proposer_priority": "0"
+      }
+    ],
+    header: { height: 1 }
+  })
 
-    node.update({
+  try {
+    await node.update({
       height: '123',
       time: Date.now() + 1e8
     })
-      .then(() => t.fail())
-      .catch((err) => {
-        t.is(err.message, 'Header time is too far in the future')
-        t.end()
-      })
-  })
+    t.fail()
+  } catch (err) {
+    t.is(err.message, 'Header time is too far in the future')
+  }
 })

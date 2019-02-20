@@ -177,13 +177,12 @@ test('ws disconnect emits error', async (t) => {
   let server = createWsServer(port, (req, res) => res(null, {}))
   let rpc = RpcClient(`ws://localhost:${port}`)
   await rpc.status()
-  server.close()
-  await new Promise((resolve) => {
-    rpc.on('error', (err) => {
-      t.is(err.message, 'websocket disconnected')
-      resolve()
-    })
+  let waitForError = new Promise((resolve) => {
+    rpc.on('error', resolve)
   })
+  server.close()
+  await waitForError
+  t.pass()
 })
 
 test('ws subscription requires listener', async (t) => {
