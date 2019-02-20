@@ -1,0 +1,30 @@
+[
+  {
+    "value": {
+      "block": 1234,
+      "app": 5678
+    },
+    "encoding": "08d20910ae2c"
+  },
+  {
+    "value": {
+      "block": 1,
+      "app": 0
+    },
+    "encoding": "0801"
+  },
+  {
+    "value": {
+      "block": 0,
+      "app": 1
+    },
+    "encoding": "1001"
+  },
+  {
+    "value": {
+      "block": 0,
+      "app": 0
+    },
+    "encoding": ""
+  }
+]

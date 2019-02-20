@@ -12,7 +12,27 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tendermint/version"
 )
+
+var versionValues = []version.Consensus{
+	version.Consensus{
+		Block: 1234,
+		App:   5678,
+	},
+	version.Consensus{
+		Block: 1,
+		App:   0,
+	},
+	version.Consensus{
+		Block: 0,
+		App:   1,
+	},
+	version.Consensus{
+		Block: 0,
+		App:   0,
+	},
+}
 
 var voteValues = []types.Vote{
 	types.Vote{
@@ -149,6 +169,13 @@ func generateJSON(encodings []encoding) []byte {
 
 func main() {
 	filePerm := os.FileMode(0644)
+
+	versionIValues := make([]interface{}, len(versionValues))
+	for i, v := range versionValues {
+		versionIValues[i] = v
+	}
+	versionFixtures := generateJSON(encode(versionIValues))
+	ioutil.WriteFile("test/fixtures/version.json", versionFixtures, filePerm)
 
 	varintFixtures := generateJSON(encodeVarints(varintValues))
 	ioutil.WriteFile("test/fixtures/varint.json", varintFixtures, filePerm)

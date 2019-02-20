@@ -6,9 +6,11 @@ let {
   BlockID,
   PubKey,
   ValidatorHashInput,
-  CanonicalVote
+  CanonicalVote,
+  Version
 } = require('../lib/types.js')
 
+let versionFixtures = require('./fixtures/version.json')
 let voteFixtures = require('./fixtures/vote.json')
 let varintFixtures = require('./fixtures/varint.json')
 let timeFixtures = require('./fixtures/time.json')
@@ -23,6 +25,14 @@ function EncodeTest (t, type) {
     t.equals(actual, expected, `encode ${JSON.stringify(value, null, '  ')}`)
   }
 }
+
+test('Version', (t) => {
+  for (let { value, encoding } of versionFixtures) {
+    let actual = Version.encode(value).toString('hex')
+    t.equals(actual, encoding, `encode ${JSON.stringify(value)}`)
+  }
+  t.end()
+})
 
 test('Vote', (t) => {
   for (let { value, encoding } of voteFixtures) {
