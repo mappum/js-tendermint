@@ -134,26 +134,20 @@ const ValidatorHashInput = {
     let length = ValidatorHashInput.encodingLength(validator)
     let buffer = Buffer.alloc(length)
 
-    // address field
-    buffer[0] = 0x0a
-    buffer[1] = 0x14
-    let address = Buffer.from(validator.address, 'hex')
-    address.copy(buffer, 2)
-
     // pubkey field
-    buffer[22] = 0x12
-    buffer[23] = 0x25
-    PubKey.encode(validator.pub_key, buffer, 24)
+    buffer[0] = 0x0a
+    buffer[1] = 0x25
+    PubKey.encode(validator.pub_key, buffer, 2)
 
     // voting power field
-    buffer[61] = 0x18
-    VarInt.encode(validator.voting_power, buffer, 62)
+    buffer[39] = 0x10
+    VarInt.encode(validator.voting_power, buffer, 40)
 
     ValidatorHashInput.encode.bytes = length
     return buffer
   },
   encodingLength (validator) {
-    return 62 + VarInt.encodingLength(validator.voting_power)
+    return 40 + VarInt.encodingLength(validator.voting_power)
   }
 }
 
