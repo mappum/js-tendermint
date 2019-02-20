@@ -15,6 +15,22 @@ import (
 	"github.com/tendermint/tendermint/types"
 )
 
+var voteValues = []types.Vote{
+	types.Vote{
+		Type:   1,
+		Height: 1234567890,
+		Round:  2,
+		BlockID: types.BlockID{
+			Hash: []byte("01234567890123456789"),
+			PartsHeader: types.PartSetHeader{
+				Hash:  []byte("01234567890123456789"),
+				Total: 1,
+			},
+		},
+		Timestamp: time.Unix(123456789, 123456789).UTC(),
+	},
+}
+
 var varintValues = []int64{
 	0,
 	1,
@@ -94,6 +110,23 @@ func encodeVarints(values []int64) []encoding {
 	return encodings
 }
 
+func encodeVotes(values []types.Vote) []encoding {
+	encodings := make([]encoding, len(values))
+	for i, value := range values {
+		canonical := types.CanonicalizeVote("chain-id", &value)
+
+		bz, err := cdc.MarshalBinaryBare(canonical)
+		if err != nil {
+			panic(err)
+		}
+		encodings[i] = encoding{
+			Value:    value,
+			Encoding: hex.EncodeToString(bz),
+		}
+	}
+	return encodings
+}
+
 func encode(values []interface{}) []encoding {
 	encodings := make([]encoding, len(values))
 	for i, value := range values {
@@ -122,6 +155,9 @@ func main() {
 
 	varintFixtures := generateJSON(encodeVarints(varintValues))
 	ioutil.WriteFile("test/fixtures/varint.json", varintFixtures, filePerm)
+
+	voteFixtures := generateJSON(encodeVotes(voteValues))
+	ioutil.WriteFile("test/fixtures/vote.json", voteFixtures, filePerm)
 
 	timeIValues := make([]interface{}, len(timeValues))
 	for i, v := range timeValues {
