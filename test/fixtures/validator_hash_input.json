@@ -1,6 +1,5 @@
 {
   "value": {
-    "address": "045F5600654182CFEACCFE6CB19F0642E8A59898",
     "pub_key": [
       52,
       210,
@@ -37,5 +36,5 @@
     ],
     "voting_power": 1234
   },
-  "encoding": "0a14045f5600654182cfeaccfe6cb19f0642e8a5989812251624de642034d26579dbb456693e540672cf922f52dde0d6532e35bf06be013a7c532f20e018a413"
+  "encoding": "0a251624de642034d26579dbb456693e540672cf922f52dde0d6532e35bf06be013a7c532f20e010a413"
 }
