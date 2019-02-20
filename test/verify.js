@@ -39,6 +39,7 @@ test('verifyCommit with mismatched header and precommit', (t) => {
 function genGenesisHeader (validators) {
   let validatorsHash = getValidatorSetHash(validators)
   return {
+    version: { block: 123, app: 456 },
     chain_id: Math.random().toString(36),
     height: 1,
     time: new Date().toISOString(),
@@ -55,7 +56,8 @@ function genGenesisHeader (validators) {
     consensus_hash: genHash(),
     app_hash: '',
     last_results_hash: '',
-    evidence_hash: ''
+    evidence_hash: '',
+    proposer_address: '0001020304050607080900010203040506070809'
   }
 }
 
