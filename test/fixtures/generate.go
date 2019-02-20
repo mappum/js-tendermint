@@ -48,6 +48,45 @@ var voteValues = []types.Vote{
 		},
 		Timestamp: time.Unix(123456789, 123456789).UTC(),
 	},
+	types.Vote{
+		Type:   1,
+		Height: 1234567890,
+		Round:  0,
+		BlockID: types.BlockID{
+			Hash: []byte("01234567890123456789012345678901"),
+			PartsHeader: types.PartSetHeader{
+				Hash:  []byte("01234567890123456789012345678901"),
+				Total: 1,
+			},
+		},
+		Timestamp: time.Unix(123456789, 123456789).UTC(),
+	},
+	types.Vote{
+		Type:   1,
+		Height: 1234567890,
+		Round:  0,
+		BlockID: types.BlockID{
+			Hash: []byte("01234567890123456789012345678901"),
+			PartsHeader: types.PartSetHeader{
+				Hash:  []byte("01234567890123456789012345678901"),
+				Total: 1,
+			},
+		},
+		Timestamp: time.Unix(123456789, 0).UTC(),
+	},
+	types.Vote{
+		Type:   1,
+		Height: 1234567890,
+		Round:  0,
+		BlockID: types.BlockID{
+			Hash: []byte("01234567890123456789012345678901"),
+			PartsHeader: types.PartSetHeader{
+				Hash:  []byte("01234567890123456789012345678901"),
+				Total: 123,
+			},
+		},
+		Timestamp: time.Unix(123456789, 0).UTC(),
+	},
 }
 
 var varintValues = []int64{
@@ -63,10 +102,17 @@ var varintValues = []int64{
 var blockIDValues = []types.BlockID{
 	types.BlockID{PartsHeader: types.PartSetHeader{}},
 	types.BlockID{
-		Hash: []byte("01234567890123456789"),
+		Hash: []byte("01234567890123456789012345678901"),
 		PartsHeader: types.PartSetHeader{
-			Hash:  []byte("01234567890123456789"),
+			Hash:  []byte("01234567890123456789012345678901"),
 			Total: 1,
+		},
+	},
+	types.BlockID{
+		Hash: []byte("01234567890123456789012345678901"),
+		PartsHeader: types.PartSetHeader{
+			Hash:  []byte("01234567890123456789012345678901"),
+			Total: 123,
 		},
 	},
 }
@@ -107,6 +153,8 @@ func init() {
 
 	timeValues = []time.Time{
 		time.Unix(123456789, 123456789).UTC(),
+		time.Unix(123456789, 0).UTC(),
+		time.Unix(0, 123456789).UTC(),
 		time.Now().UTC(),
 	}
 }
