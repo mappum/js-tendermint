@@ -7,7 +7,10 @@ const {
   getBlockHash,
   getValidatorSetHash
 } = require('./hash.js')
-const { CanonicalVote } = require('./types.js')
+const {
+  VarBuffer,
+  CanonicalVote
+} = require('./types.js')
 const { getAddress } = require('./pubkey.js')
 const { safeParseInt } = require('./common.js')
 
@@ -16,7 +19,12 @@ const { safeParseInt } = require('./common.js')
 function getVoteSignBytes (chainId, vote) {
   let canonicalVote = Object.assign({}, vote)
   canonicalVote.chain_id = chainId
-  return CanonicalVote.encode(canonicalVote)
+  canonicalVote.height = safeParseInt(vote.height)
+  canonicalVote.round = safeParseInt(vote.round)
+  canonicalVote.block_id.parts.total = safeParseInt(vote.block_id.parts.total)
+  canonicalVote.validator_index = safeParseInt(vote.validator_index)
+  let encodedVote = CanonicalVote.encode(canonicalVote)
+  return VarBuffer.encode(encodedVote)
 }
 
 // verifies that a number is a positive integer, less than the
@@ -56,7 +64,7 @@ function verifyCommit (header, commit, validators) {
     if (precommit.block_id.hash !== commit.block_id.hash) {
       throw Error('Precommit block hash does not match commit')
     }
-    if (precommit.block_id.parts.total !== commit.block_id.parts.total) {
+    if (safeParseInt(precommit.block_id.parts.total) !== safeParseInt(commit.block_id.parts.total)) {
       throw Error('Precommit parts count does not match commit')
     }
     if (precommit.block_id.parts.hash !== commit.block_id.parts.hash) {
@@ -124,7 +132,6 @@ function verifyCommitSigs (header, commit, validators) {
     let signBytes = getVoteSignBytes(header.chain_id, precommit)
     let pubKey = Buffer.from(validator.pub_key.value, 'base64')
 
-    // TODO: support secp256k1 sigs
     if (!ed25519.verify(signature, signBytes, pubKey)) {
       throw Error('Invalid precommit signature')
     }
