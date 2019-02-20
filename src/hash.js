@@ -8,7 +8,6 @@ const {
   VarHexBuffer,
   Time,
   BlockID,
-  TreeHashInput,
   ValidatorHashInput
 } = require('./types.js')
 
@@ -48,13 +47,8 @@ function getBlockHash (header) {
 }
 
 function getValidatorSetHash (validators) {
-  let hashes = validators.map(getValidatorHash)
-  return treeHash(hashes).toString('hex').toUpperCase()
-}
-
-function getValidatorHash (validator) {
-  let bytes = ValidatorHashInput.encode(validator)
-  return tmhash(bytes)
+  let bytes = validators.map(ValidatorHashInput.encode)
+  return treeHash(bytes).toString('hex').toUpperCase()
 }
 
 function kvHash (type, value, key) {
@@ -77,16 +71,36 @@ function kvHash (type, value, key) {
 
 function treeHash (hashes) {
   if (hashes.length === 0) {
-    throw Error('Empty hash list')
+    return null
   }
   if (hashes.length === 1) {
-    return hashes[0]
+    // leaf hash
+    return tmhash(Buffer.concat([
+      Buffer.from([ 0 ]),
+      hashes[0]
+    ]))
   }
-  let midpoint = Math.ceil(hashes.length / 2)
-  let left = treeHash(hashes.slice(0, midpoint))
-  let right = treeHash(hashes.slice(midpoint))
-  let hashInput = TreeHashInput.encode({ left, right })
-  return tmhash(hashInput)
+  let splitPoint = getSplitPoint(hashes.length)
+  let left = treeHash(hashes.slice(0, splitPoint))
+  let right = treeHash(hashes.slice(splitPoint))
+  // inner hash
+  return tmhash(Buffer.concat([
+    Buffer.from([ 1 ]),
+    left,
+    right
+  ]))
+}
+
+function getSplitPoint (n) {
+  if (n < 1) {
+    throw Error('Trying to split tree with length < 1')
+  }
+
+  let mid = 2 ** Math.floor(Math.log2(n))
+  if (mid === n) {
+    mid /= 2
+  }
+  return mid
 }
 
 function hashFunc (algorithm) {
@@ -99,7 +113,6 @@ function hashFunc (algorithm) {
 
 module.exports = {
   getBlockHash,
-  getValidatorHash,
   getValidatorSetHash,
   sha256,
   tmhash
