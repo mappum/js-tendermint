@@ -220,6 +220,49 @@ const CanonicalVote = {
   }
 }
 
+const Version = {
+  decode (buffer, start = 0, end = buffer.length) {
+    throw Error('Decode not implemented')
+  },
+  encode (version) {
+    let length = Version.encodingLength(version)
+    let buffer = Buffer.alloc(length)
+    let offset = 0
+
+    let block = Number(version.block)
+    let app = Number(version.app)
+
+    // block field
+    if (block) {
+      buffer[offset] = 0x08
+      UVarInt.encode(version.block, buffer, offset + 1)
+      offset += UVarInt.encode.bytes + 1
+    }
+
+    // app field
+    if (app) {
+      buffer[offset] = 0x10
+      UVarInt.encode(version.app, buffer, offset + 1)
+    }
+
+    CanonicalVote.encode.bytes = length
+    return buffer
+  },
+  encodingLength (version) {
+    let block = Number(version.block)
+    let app = Number(version.app)
+
+    let length = 0
+    if (block) {
+      length += UVarInt.encodingLength(version.block) + 1
+    }
+    if (app) {
+      length += UVarInt.encodingLength(version.app) + 1
+    }
+    return length
+  }
+}
+
 module.exports = {
   VarInt,
   UVarInt,
@@ -233,5 +276,6 @@ module.exports = {
   ValidatorHashInput,
   PubKey,
   Int64LE,
-  CanonicalVote
+  CanonicalVote,
+  Version
 }
