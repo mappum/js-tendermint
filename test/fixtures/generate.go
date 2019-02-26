@@ -113,9 +113,15 @@ var blockIDValues = []types.BlockID{
 
 var pubkeyValue = ed25519.GenPrivKeyFromSecret([]byte("foo")).PubKey()
 
-var validatorHashInput = ValidatorHashInput{
-	pubkeyValue,
-	1234,
+var validatorHashInputs = []ValidatorHashInput{
+	ValidatorHashInput{
+		pubkeyValue,
+		1234,
+	},
+	ValidatorHashInput{
+		pubkeyValue,
+		2000000,
+	},
 }
 
 type ValidatorHashInput struct {
@@ -178,6 +184,29 @@ func encodeVotes(values []types.Vote) []encoding {
 		if err != nil {
 			panic(err)
 		}
+		encodings[i] = encoding{
+			Value:    value,
+			Encoding: hex.EncodeToString(bz),
+		}
+	}
+	return encodings
+}
+
+func encodeValidatorHashInputs(values []ValidatorHashInput) []encoding {
+	encodings := make([]encoding, len(values))
+	for i, value := range values {
+		bz, err := cdc.MarshalBinaryBare(value)
+		if err != nil {
+			panic(err)
+		}
+		// validatorHashInputFixtures, err := json.MarshalIndent(encoding{
+		// 	&value,
+		// 	hex.EncodeToString(bz),
+		// }, "", "  ")
+		// if err != nil {
+		// 	panic(err)
+		// }
+
 		encodings[i] = encoding{
 			Value:    value,
 			Encoding: hex.EncodeToString(bz),
@@ -255,16 +284,6 @@ func main() {
 	}
 	ioutil.WriteFile("test/fixtures/pubkey.json", pubkeyFixtures, filePerm)
 
-	validatorHashInputBytes, err := cdc.MarshalBinaryBare(validatorHashInput)
-	if err != nil {
-		panic(err)
-	}
-	validatorHashInputFixtures, err := json.MarshalIndent(encoding{
-		&validatorHashInput,
-		hex.EncodeToString(validatorHashInputBytes),
-	}, "", "  ")
-	if err != nil {
-		panic(err)
-	}
+	validatorHashInputFixtures := generateJSON(encodeValidatorHashInputs(validatorHashInputs))
 	ioutil.WriteFile("test/fixtures/validator_hash_input.json", validatorHashInputFixtures, filePerm)
 }

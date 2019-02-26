@@ -16,8 +16,10 @@ let varintFixtures = require('./fixtures/varint.json')
 let timeFixtures = require('./fixtures/time.json')
 let blockIDFixtures = require('./fixtures/block_id.json')
 let pubkeyFixture = require('./fixtures/pubkey.json')
-let validatorHashInputFixture = require('./fixtures/validator_hash_input.json')
-validatorHashInputFixture.value.pub_key = pubkeyFixture.value
+let validatorHashInputFixtures = require('./fixtures/validator_hash_input.json')
+for (let vhi of validatorHashInputFixtures) {
+  vhi.value.pub_key = pubkeyFixture.value
+}
 
 function EncodeTest (t, type) {
   return (value, expected) => {
@@ -90,10 +92,9 @@ test('PubKey', (t) => {
 })
 
 test('ValidatorHashInput', (t) => {
-  let encodeTest = EncodeTest(t, ValidatorHashInput)
-  encodeTest(
-    validatorHashInputFixture.value,
-    validatorHashInputFixture.encoding
-  )
+  for (let { value, encoding } of validatorHashInputFixtures) {
+    let actual = ValidatorHashInput.encode(value).toString('hex')
+    t.equals(actual, encoding, `encode ${value}`)
+  }
   t.end()
 })
