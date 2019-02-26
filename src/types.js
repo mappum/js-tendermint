@@ -209,7 +209,7 @@ const ValidatorHashInput = {
     return buffer
   },
   encodingLength (validator) {
-    return 40 + VarInt.encodingLength(validator.voting_power)
+    return 40 + UVarInt.encodingLength(validator.voting_power)
   }
 }
 
