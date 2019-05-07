@@ -59,17 +59,8 @@ function verifyCommit (header, commit, validators) {
 
     precommit.height = safeParseInt(precommit.height)
     precommit.round = safeParseInt(precommit.round)
-
-    // all fields of block ID must match commit
-    if (precommit.block_id.hash !== commit.block_id.hash) {
-      throw Error('Precommit block hash does not match commit')
-    }
-    if (safeParseInt(precommit.block_id.parts.total) !== safeParseInt(commit.block_id.parts.total)) {
-      throw Error('Precommit parts count does not match commit')
-    }
-    if (precommit.block_id.parts.hash !== commit.block_id.parts.hash) {
-      throw Error('Precommit parts hash does not match commit')
-    }
+    // ensure precommit uses correct block_id (ignore the one it had)
+    precommit.block_id = commit.block_id
 
     // height must match header
     if (precommit.height !== header.height) {
