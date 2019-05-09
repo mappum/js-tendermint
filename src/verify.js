@@ -222,6 +222,8 @@ function verify (oldState, newState) {
       // headers between `oldState` and `newState` if this check passes
       verifyCommitSigs(newHeader, newState.commit, oldValidators)
     }
+
+    // TODO: also pass transition if +2/3 of old validator set is still represented in commit
   }
 }
 
