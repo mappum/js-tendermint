@@ -109,11 +109,7 @@ class LightNode extends EventEmitter {
     header.height = safeParseInt(header.height)
 
     try {
-      // test if this commit is signed by 2/3+ of our old set
-      // (throws if not)
-      verifyCommitSigs(header, commit, this._state.validators)
-
-      // verifiable, let's update
+      // try to verify (throws if we can't)
       await this.update(header, commit)
 
       // reached target
