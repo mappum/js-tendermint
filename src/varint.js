@@ -25,6 +25,8 @@ function VarInt (signed) {
   }
 
   function encodingLength (n) {
+    n = safeParseInt(n)
+    
     if (signed) n *= 2
     if ((!signed && n < 0) || Math.abs(n) > Number.MAX_SAFE_INTEGER) {
       throw Error('varint value is out of bounds')
