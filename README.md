@@ -90,7 +90,7 @@ The following RPC methods are available:
 - validators
 - dumpConsensusState
 - broadcastTxCommit
-- broadcastTxSync
+- broadcastTxAsync
 - broadcastTxSync
 - unconfirmedTxs
 - numUnconfirmedTxs
