@@ -38,7 +38,7 @@
     "standard": "^11.0.1",
     "tape": "^4.9.1",
     "tempy": "^0.2.1",
-    "tendermint-node": "^5.0.2",
+    "tendermint-node": "^5.1.4",
     "ws": "^5.2.1"
   },
   "babel": {
