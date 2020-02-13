@@ -137,10 +137,10 @@ test('ws subscription', async (t) => {
     res(null, {})
     res(null,
       { data: { value: 'foo' } },
-      `${req.id}#event`)
+      req.id)
     res(null,
       { data: { value: 'bar' } },
-      `${req.id}#event`)
+      req.id)
   })
   let rpc = RpcClient(`ws://localhost:${port}`)
   await new Promise((resolve) => {

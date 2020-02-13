@@ -117,15 +117,13 @@ class Client extends EventEmitter {
         }
 
         // events get passed to listener
-        this.on(id + '#event', (err, res) => {
-          if (err) return self.emit('error', err)
-          listener(res.data.value)
-        })
-
-        // promise resolves on successful subscription or error
-        this.on(id, (err) => {
-          if (err) return reject(err)
-          resolve()
+        this.on(id, (err, res) => {
+          if (err) {
+            reject(err)
+            return self.emit('error', err)
+          }
+          if (res.data) listener(res.data.value)
+          resolve(res)
         })
       } else {
         // response goes to promise
