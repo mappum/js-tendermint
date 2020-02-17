@@ -22,7 +22,9 @@ function getVoteSignBytes (chainId, vote) {
   canonicalVote.height = safeParseInt(vote.height)
   canonicalVote.round = safeParseInt(vote.round)
   canonicalVote.block_id.parts.total = safeParseInt(vote.block_id.parts.total)
-  canonicalVote.validator_index = safeParseInt(vote.validator_index)
+  if (vote.validator_index) {
+    canonicalVote.validator_index = safeParseInt(vote.validator_index)
+  }
   let encodedVote = CanonicalVote.encode(canonicalVote)
   return VarBuffer.encode(encodedVote)
 }
@@ -41,9 +43,164 @@ function verifyPositiveInt (n) {
   }
 }
 
+
+
 // verifies a commit signs the given header, with 2/3+ of
 // the voting power from given validator set
 function verifyCommit (header, commit, validators) {
+  if (commit.signatures) {
+    return verifyCommit033(header, commit, validators)
+  } else {
+    return verifyCommitPre033(header, commit, validators);
+  }
+}
+
+
+// verifies a commit is signed by at least 2/3+ of the voting
+// power of the given validator set
+function verifyCommitSigs (header, commit, validators) {
+  if (commit.signatures) {
+    return verifyCommitSigs033(header, commit, validators)
+  } else {
+    return verifyCommitSigsPre033(header, commit, validators);
+  }
+}
+
+// verifies a commit signs the given header, with 2/3+ of
+// the voting power from given validator set
+//
+// This is for Tendermint v0.33.0 and later
+function verifyCommit033 (header, commit, validators) {
+  let blockHash = getBlockHash(header)
+
+  if (blockHash !== commit.block_id.hash) {
+    throw Error('Commit does not match block hash')
+  }
+
+  let countedValidators = new Set()
+
+  for (let signature of commit.signatures) {
+    // ensure there are never multiple signatures from a single validator
+    let validator_address = signature.validator_address
+    if (countedValidators.has(validator_address)) {
+      throw Error('Validator has multiple signatures')
+    }
+    countedValidators.add(signature.validator_address)
+
+    // ensure this signature references a correct validator
+    let validator = validators.find(function (v) {
+      return v.address === validator_address
+    })
+    if (!validator) {
+      throw Error('Signature address does not match validator')
+    }
+  }
+
+  verifyCommitSigs033(header, commit, validators)
+}
+
+
+// verifies a commit is signed by at least 2/3+ of the voting
+// power of the given validator set
+//
+// This is for Tendermint v0.33.0 and later
+function verifyCommitSigs033 (header, commit, validators) {
+  let committedVotingPower = 0
+
+  // index validators by address
+  let validatorsByAddress = new Map()
+  for (let validator of validators) {
+    validatorsByAddress.set(validator.address, validator)
+  }
+
+  const PrecommitType = 2;
+  const BlockIDFlagAbsent = 1;
+  const BlockIDFlagCommit = 2;
+  const BlockIDFlagNil = 3;
+
+  for (let cs of commit.signatures) {
+    switch (cs.block_id_flag) {
+      case BlockIDFlagAbsent:
+      case BlockIDFlagCommit:
+      case BlockIDFlagNil:
+        break;
+
+      default:
+        throw Error('unknown block_id_flag ' + cs.block_id_flag)
+    }
+
+    switch (cs.block_id_flag) {
+      case BlockIDFlagAbsent:
+        if (cs.validator_address) {
+          throw Error('validator address is present')
+        }
+        if (cs.timestamp) {
+          throw Error('time is present')
+        }
+        if (cs.signature) {
+          throw Error('signature is present')
+        }
+        break;
+      default:
+        // address size is wrong
+        if (!cs.signature) {
+          throw Error('signature is missing')
+        }
+        // signature too big
+    }
+
+    let validator = validatorsByAddress.get(cs.validator_address)
+
+    // skip if this validator isn't in the set
+    // (we allow signatures from validators not in the set,
+    // because we sometimes check the commit against older
+    // validator sets)
+    if (!validator) continue
+
+    let signature = Buffer.from(cs.signature, 'base64')
+    let vote = {
+      type: PrecommitType,
+      timestamp: cs.timestamp,
+      block_id: commit.block_id,
+      height: commit.height,
+      round: commit.round,
+    }
+    let signBytes = getVoteSignBytes(header.chain_id, vote)
+    let pubKey = Buffer.from(validator.pub_key.value, 'base64')
+
+    if (!ed25519.verify(signature, signBytes, pubKey)) {
+      throw Error('Invalid signature')
+    }
+
+    // count this validator's voting power
+    committedVotingPower += safeParseInt(validator.voting_power)
+  }
+
+  // sum all validators' voting power
+  let totalVotingPower = validators.reduce(
+    (sum, v) => sum + safeParseInt(v.voting_power), 0)
+  // JS numbers have no loss of precision up to 2^53, but we
+  // error at over 2^52 since we have to do arithmetic. apps
+  // should be able to keep voting power lower than this anyway
+  if (totalVotingPower > 2 ** 52) {
+    throw Error('Total voting power must be less than 2^52')
+  }
+
+  // verify enough voting power signed
+  let twoThirds = Math.ceil(totalVotingPower * 2 / 3)
+  if (committedVotingPower < twoThirds) {
+    let error = Error('Not enough committed voting power')
+    error.insufficientVotingPower = true
+    throw error
+  }
+}
+
+
+// verifies a commit signs the given header, with 2/3+ of
+// the voting power from given validator set
+//
+// This is for Tendermint pre-v0.33.0
+function verifyCommitPre033 (header, commit, validators) {
   let blockHash = getBlockHash(header)
 
   if (blockHash !== commit.block_id.hash) {
@@ -103,12 +260,14 @@ function verifyCommit (header, commit, validators) {
     }
   }
 
-  verifyCommitSigs(header, commit, validators)
+  verifyCommitSigsPre033(header, commit, validators)
 }
 
 // verifies a commit is signed by at least 2/3+ of the voting
 // power of the given validator set
-function verifyCommitSigs (header, commit, validators) {
+//
+// This is for Tendermint pre-v0.33.0
+function verifyCommitSigsPre033 (header, commit, validators) {
   let committedVotingPower = 0
 
   // index validators by address
@@ -160,6 +319,7 @@ function verifyCommitSigs (header, commit, validators) {
     throw error
   }
 }
+
 
 // verifies that a validator set is in the correct format
 // and hashes to the correct value
