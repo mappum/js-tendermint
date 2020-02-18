@@ -187,7 +187,7 @@ class LightNode extends EventEmitter {
 
     let validatorSetChanged = header.validators_hash !== this._state.header.validators_hash
     if (validatorSetChanged) {
-      let res = await this.rpc.validators({ height })
+      let res = await this.rpc.validators({ height, per_page: -1 })
       validators = res.validators
     }
 
