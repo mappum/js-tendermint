@@ -84,6 +84,9 @@ class Client extends EventEmitter {
     })
     this.ws.on('data', (data) => {
       data = JSON.parse(data)
+      if (data.result && data.result.query) {
+        this.emit('query#' + data.result.query, data.error, data.result)
+      }
       if (!data.id) return
       this.emit(data.id, data.error, data.result)
     })
@@ -121,6 +124,14 @@ class Client extends EventEmitter {
           if (err) return self.emit('error', err)
           listener(res.data.value)
         })
+
+        // id-free query responses in tendermint-0.33 are returned as follows
+        if (params.query) {
+          this.on('query#' + params.query, (err, res) => {
+            if (err) return self.emit('error', err)
+            listener(res.data.value)
+          })
+        }
 
         // promise resolves on successful subscription or error
         this.on(id, (err) => {
