@@ -83,17 +83,18 @@ function verifyCommit033 (header, commit, validators) {
     // ensure there are never multiple signatures from a single validator
     let validator_address = signature.validator_address
     if (countedValidators.has(validator_address)) {
-      throw Error('Validator has multiple signatures')
+      // FIXME: Do something like this?
+      // throw Error('Validator has multiple signatures')
     }
     countedValidators.add(signature.validator_address)
+  }
 
-    // ensure this signature references a correct validator
-    let validator = validators.find(function (v) {
-      return v.address === validator_address
-    })
-    if (!validator) {
-      throw Error('Signature address does not match validator')
-    }
+  // ensure this signature references at least one validator
+  let validator = validators.find(function (v) {
+    return countedValidators.has(v.address)
+  })
+  if (!validator) {
+    throw Error('No recognized validators have signatures')
   }
 
   verifyCommitSigs033(header, commit, validators)
@@ -127,26 +128,6 @@ function verifyCommitSigs033 (header, commit, validators) {
 
       default:
         throw Error('unknown block_id_flag ' + cs.block_id_flag)
-    }
-
-    switch (cs.block_id_flag) {
-      case BlockIDFlagAbsent:
-        if (cs.validator_address) {
-          throw Error('validator address is present')
-        }
-        if (cs.timestamp) {
-          throw Error('time is present')
-        }
-        if (cs.signature) {
-          throw Error('signature is present')
-        }
-        break;
-      default:
-        // address size is wrong
-        if (!cs.signature) {
-          throw Error('signature is missing')
-        }
-        // signature too big
     }
 
     let validator = validatorsByAddress.get(cs.validator_address)
