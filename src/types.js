@@ -164,6 +164,7 @@ const TreeHashInput = struct([
   { name: 'right', type: VarBuffer }
 ])
 
+// TODO: support secp keys (separate prefix)
 const pubkeyAminoPrefix = Buffer.from('1624DE6420', 'hex')
 const PubKey = {
   decode (buffer, start = 0, end = buffer.length) {
@@ -200,6 +201,8 @@ const ValidatorHashInput = {
     buffer[0] = 0x0a
     buffer[1] = 0x25
     PubKey.encode(validator.pub_key, buffer, 2)
+
+    // TODO: handle pubkeys of different length
 
     // voting power field
     buffer[39] = 0x10
