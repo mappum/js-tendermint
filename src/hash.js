@@ -22,9 +22,6 @@ function getBlockHash (header) {
     VarString.encode(header.chain_id),
     UVarInt.encode(header.height),
     Time.encode(header.time),
-    // These two fields are omitted in Tendermint v0.33.0 and beyond.
-    ...(header.num_txs ? [UVarInt.encode(header.num_txs)] : []),
-    ...(header.total_txs ? [UVarInt.encode(header.total_txs)] : []),
     BlockID.encode(header.last_block_id),
     omitEmpty(VarHexBuffer.encode(header.last_commit_hash)),
     omitEmpty(VarHexBuffer.encode(header.data_hash)),

@@ -43,34 +43,11 @@ function verifyPositiveInt (n) {
   }
 }
 
-
-
-// verifies a commit signs the given header, with 2/3+ of
-// the voting power from given validator set
-function verifyCommit (header, commit, validators) {
-  if (commit.signatures) {
-    return verifyCommit033(header, commit, validators)
-  } else {
-    return verifyCommitPre033(header, commit, validators);
-  }
-}
-
-
-// verifies a commit is signed by at least 2/3+ of the voting
-// power of the given validator set
-function verifyCommitSigs (header, commit, validators) {
-  if (commit.signatures) {
-    return verifyCommitSigs033(header, commit, validators)
-  } else {
-    return verifyCommitSigsPre033(header, commit, validators);
-  }
-}
-
 // verifies a commit signs the given header, with 2/3+ of
 // the voting power from given validator set
 //
 // This is for Tendermint v0.33.0 and later
-function verifyCommit033 (header, commit, validators) {
+function verifyCommit (header, commit, validators) {
   let blockHash = getBlockHash(header)
 
   if (blockHash !== commit.block_id.hash) {
@@ -83,21 +60,18 @@ function verifyCommit033 (header, commit, validators) {
     // ensure there are never multiple signatures from a single validator
     let validator_address = signature.validator_address
     if (countedValidators.has(validator_address)) {
-      // FIXME: Do something like this?
-      // throw Error('Validator has multiple signatures')
+      throw Error('Validator has multiple signatures')
     }
     countedValidators.add(signature.validator_address)
   }
 
   // ensure this signature references at least one validator
-  let validator = validators.find(function (v) {
-    return countedValidators.has(v.address)
-  })
+  let validator = validators.find((v) => countedValidators.has(v.address))
   if (!validator) {
     throw Error('No recognized validators have signatures')
   }
 
-  verifyCommitSigs033(header, commit, validators)
+  verifyCommitSigs(header, commit, validators)
 }
 
 
@@ -105,7 +79,7 @@ function verifyCommit033 (header, commit, validators) {
 // power of the given validator set
 //
 // This is for Tendermint v0.33.0 and later
-function verifyCommitSigs033 (header, commit, validators) {
+function verifyCommitSigs (header, commit, validators) {
   let committedVotingPower = 0
 
   // index validators by address
@@ -127,7 +101,7 @@ function verifyCommitSigs033 (header, commit, validators) {
         break;
 
       default:
-        throw Error('unknown block_id_flag ' + cs.block_id_flag)
+        throw Error(`unknown block_id_flag: ${cs.block_id_flag}`)
     }
 
     let validator = validatorsByAddress.get(cs.validator_address)
@@ -147,8 +121,8 @@ function verifyCommitSigs033 (header, commit, validators) {
       round: commit.round,
     }
     let signBytes = getVoteSignBytes(header.chain_id, vote)
+    // TODO: support secp256k1 signatures
     let pubKey = Buffer.from(validator.pub_key.value, 'base64')
-
     if (!ed25519.verify(signature, signBytes, pubKey)) {
       throw Error('Invalid signature')
     }
@@ -175,132 +149,6 @@ function verifyCommitSigs033 (header, commit, validators) {
     throw error
   }
 }
-
-
-// verifies a commit signs the given header, with 2/3+ of
-// the voting power from given validator set
-//
-// This is for Tendermint pre-v0.33.0
-function verifyCommitPre033 (header, commit, validators) {
-  let blockHash = getBlockHash(header)
-
-  if (blockHash !== commit.block_id.hash) {
-    throw Error('Commit does not match block hash')
-  }
-
-  let countedValidators = new Array(validators.length)
-  let roundNumber
-
-  for (let precommit of commit.precommits) {
-    // skip empty precommits
-    if (precommit == null) continue
-    if (!precommit.block_id.hash) continue
-
-    precommit.height = safeParseInt(precommit.height)
-    precommit.round = safeParseInt(precommit.round)
-
-    // all fields of block ID must match commit
-    if (precommit.block_id.hash !== commit.block_id.hash) {
-      throw Error('Precommit block hash does not match commit')
-    }
-    if (safeParseInt(precommit.block_id.parts.total) !== safeParseInt(commit.block_id.parts.total)) {
-      throw Error('Precommit parts count does not match commit')
-    }
-    if (precommit.block_id.parts.hash !== commit.block_id.parts.hash) {
-      throw Error('Precommit parts hash does not match commit')
-    }
-
-    // height must match header
-    if (precommit.height !== header.height) {
-      throw Error('Precommit height does not match header')
-    }
-
-    // rounds of all precommits must match
-    verifyPositiveInt(precommit.round)
-    if (roundNumber == null) {
-      roundNumber = precommit.round
-    } else if (precommit.round !== roundNumber) {
-      throw Error('Precommit rounds do not match')
-    }
-
-    // vote type must be 2 (precommit)
-    if (precommit.type !== 2) {
-      throw Error('Precommit has invalid type value')
-    }
-
-    // ensure there are never multiple precommits from a single validator
-    if (countedValidators[precommit.validator_index]) {
-      throw Error('Validator has multiple precommits')
-    }
-    countedValidators[precommit.validator_index] = true
-
-    // ensure this precommit references the correct validator
-    let validator = validators[precommit.validator_index]
-    if (precommit.validator_address !== validator.address) {
-      throw Error('Precommit address does not match validator')
-    }
-  }
-
-  verifyCommitSigsPre033(header, commit, validators)
-}
-
-// verifies a commit is signed by at least 2/3+ of the voting
-// power of the given validator set
-//
-// This is for Tendermint pre-v0.33.0
-function verifyCommitSigsPre033 (header, commit, validators) {
-  let committedVotingPower = 0
-
-  // index validators by address
-  let validatorsByAddress = {}
-  for (let validator of validators) {
-    validatorsByAddress[validator.address] = validator
-  }
-
-  for (let precommit of commit.precommits) {
-    // skip empty precommits
-    if (precommit == null) continue
-    if (!precommit.block_id.hash) continue
-
-    let validator = validatorsByAddress[precommit.validator_address]
-
-    // skip if this validator isn't in the set
-    // (we allow precommits from validators not in the set,
-    // because we sometimes check the commit against older
-    // validator sets)
-    if (!validator) continue
-
-    let signature = Buffer.from(precommit.signature, 'base64')
-    let signBytes = getVoteSignBytes(header.chain_id, precommit)
-    let pubKey = Buffer.from(validator.pub_key.value, 'base64')
-
-    if (!ed25519.verify(signature, signBytes, pubKey)) {
-      throw Error('Invalid precommit signature')
-    }
-
-    // count this validator's voting power
-    committedVotingPower += safeParseInt(validator.voting_power)
-  }
-
-  // sum all validators' voting power
-  let totalVotingPower = validators.reduce(
-    (sum, v) => sum + safeParseInt(v.voting_power), 0)
-  // JS numbers have no loss of precision up to 2^53, but we
-  // error at over 2^52 since we have to do arithmetic. apps
-  // should be able to keep voting power lower than this anyway
-  if (totalVotingPower > 2 ** 52) {
-    throw Error('Total voting power must be less than 2^52')
-  }
-
-  // verify enough voting power signed
-  let twoThirds = Math.ceil(totalVotingPower * 2 / 3)
-  if (committedVotingPower < twoThirds) {
-    let error = Error('Not enough committed voting power')
-    error.insufficientVotingPower = true
-    throw error
-  }
-}
-
 
 // verifies that a validator set is in the correct format
 // and hashes to the correct value
