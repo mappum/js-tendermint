@@ -119,14 +119,25 @@ class Client extends EventEmitter {
           throw Error('Must provide listener function')
         }
 
-        // events get passed to listener
-        this.on(id, (err, res) => {
-          if (err) {
-            reject(err)
-            return self.emit('error', err)
-          }
-          if (res.data) listener(res.data.value)
-          resolve(res)
+        // id-free query responses in tendermint-0.33 are returned as follows
+        if (params.query) {
+          this.on('query#' + params.query, (err, res) => {
+            if (err) return self.emit('error', err)
+            listener(res.data.value)
+          })
+        }
+
+        // promise resolves on successful subscription or error
+        this.once(id, (err, res) => {
+          if (err) return reject(err)
+          
+          // now that we are subscribed, pass further events to listener
+          this.on(id, (err, res) => {
+            if (err) return this.emit('error', err)
+            listener(res.data.value)
+          })
+
+          resolve()
         })
       } else {
         // response goes to promise
