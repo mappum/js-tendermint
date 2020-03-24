@@ -2,6 +2,8 @@
 
 A light client for Tendermint blockchains which works in Node.js and browsers.
 
+Supports Tendermint v0.33.
+
 ### Usage
 ```
 npm install tendermint
