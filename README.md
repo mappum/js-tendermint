@@ -87,6 +87,7 @@ The following RPC methods are available:
 - blockchain
 - genesis
 - block
+- blockByHash
 - validators
 - dumpConsensusState
 - broadcastTxCommit
