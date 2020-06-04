@@ -13,6 +13,7 @@ module.exports = [
   'genesis',
   'health',
   'block',
+  'block_by_hash',
   'block_results',
   'blockchain',
   'validators',
